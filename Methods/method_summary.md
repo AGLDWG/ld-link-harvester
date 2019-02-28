@@ -1,4 +1,7 @@
-## Summary of Proposed Methods (Burgess et. al, 2018)
+# Potential Methods for Linked Data Seed Harvest
+This document briefly summarizes potential approaches for discovering linked data URIs within the Australian region. We also investigate potential ways of assessing methods formally and a brief high-level implementation plan of a web crawler capable of the task.
+
+## Summary Table Proposed Methods (Burgess et. al, 2018)
 This sections outlines the three key methods to discover Australian URIs for harvesting linked data and linked data seeds. *NOTE: These methods are not mutually exclusive and can be used to support one another.*
 
 | Method | Description | Potential Advantages | Potential Disadvantages |
@@ -6,8 +9,6 @@ This sections outlines the three key methods to discover Australian URIs for har
 | Second Crawler | Using a second web crawler to find RDF seeds on regular HTML web pages for use with LD Spider. | Second crawler can be either built from scratch (relatively easily) or pre-existing tools can be investigated to do the job.| Approach is not targeted and would likely require a list of Top Level Domains within Australia to start on.|
 | Google API | Searching the web for RDF seeds using the google custom search API. | Service is already developed and Google already has significant information indexed. It is also possible to search through domains such as '.au' directly and filter for linked data filetypes, making it a far more efficient and targeted approach. | Google APIs have heavy usage restrictions and limitations which may potentially make this method an inviable option. |
 | DNS Replication | Set up a DNS server such that it may populate itself with a large list of domains to work with. | There may be alternative uses for such a server (i.e. the primary purpose does not need to be to get domains for this project).| This approach is very complex and would require specialist knowledge to set up (requiring up-skilling). The time frame required is also unpredictable without further research, development and testing. There may also be easier methods to get the same information (e.g. getting a URI list from *ausdomainleger*) |
-
-
 
 ## Method Evaluation Metrics
 We propose the following metrics be used to evaluate the success of the search methods if such an evaluation is necessary.

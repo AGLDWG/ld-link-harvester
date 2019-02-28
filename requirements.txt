@@ -1,3 +1,4 @@
 requests
 threading
-rdflib
+urllib
+bs4
