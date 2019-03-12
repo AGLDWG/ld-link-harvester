@@ -14,8 +14,9 @@ INSERT INTO FailedSeed(seedURI, crawlId, statusCode) VALUES ('https://www.miller
 
 
 INSERT INTO Seed (seedURI) VALUES ('http://sharp-myers.net/tags/explore/');
+INSERT INTO Link (crawlId, address, originSeedURI) VALUES (1, 'http://sharp-myers.net/tags/rdf_catalogue/data.ttl', 'http://sharp-myers.net/tags/explore/');
 INSERT INTO CrawlSeeds(seedURI, crawlId) VALUES ('http://sharp-myers.net/tags/explore/', 1);
-INSERT INTO RdfURI(crawlId, rdfSeedURI, originSeedURI) VALUES (1, 'http://sharp-myers.net/tags/rdf_catalogue/data.ttl', 'http://sharp-myers.net/tags/explore/');
+INSERT INTO RdfURI(crawlId, rdfSeedURI, originSeedURI, contentFormat) VALUES (1, 'http://sharp-myers.net/tags/rdf_catalogue/data.ttl', 'http://sharp-myers.net/tags/explore/', 'text/turtle');
 
 INSERT INTO Seed (seedURI) VALUES ('https://www.mccormick.com/search.htm');
 INSERT INTO CrawlSeeds(seedURI, crawlId) VALUES ('https://www.mccormick.com/search.htm', 1);
@@ -38,11 +39,13 @@ INSERT INTO FailedSeed(seedURI, crawlId, statusCode) VALUES ('https://wise.net/r
 
 INSERT INTO Seed (seedURI) VALUES ('https://www.mendoza.com/');
 INSERT INTO CrawlSeeds(seedURI, crawlId) VALUES ('https://www.mendoza.com/', 2);
-INSERT INTO RdfURI(crawlId, rdfSeedURI, originSeedURI) VALUES (2, 'https://www.mendoza.com/rdflibrary/book_data.rdf', 'https://www.mendoza.com/');
+INSERT INTO Link (crawlId, address, originSeedURI) VALUES (2, 'https://www.mendoza.com/rdflibrary/book_data.rdf', 'https://www.mendoza.com/');
+INSERT INTO RdfURI(crawlId, rdfSeedURI, originSeedURI, contentFormat) VALUES (2, 'https://www.mendoza.com/rdflibrary/book_data.rdf', 'https://www.mendoza.com/', 'text/n3');
 
 INSERT INTO Seed (seedURI) VALUES ('https://www.griffin.biz/tags/wp-content/blog/login//');
 INSERT INTO CrawlSeeds(seedURI, crawlId) VALUES ('https://www.griffin.biz/tags/wp-content/blog/login/', 2);
-INSERT INTO RdfURI(crawlId, rdfSeedURI, originSeedURI) VALUES (2, 'https://www.griffin.biz/tags/rdf/turtles_are_cool.n3', 'https://www.griffin.biz/tags/wp-content/blog/login/');
+INSERT INTO Link (crawlId, address, originSeedURI) VALUES (2, 'https://www.griffin.biz/tags/rdf/turtles_are_cool.n3', 'https://www.griffin.biz/tags/wp-content/blog/login/');
+INSERT INTO RdfURI(crawlId, rdfSeedURI, originSeedURI, contentFormat) VALUES (2, 'https://www.griffin.biz/tags/rdf/turtles_are_cool.n3', 'https://www.griffin.biz/tags/wp-content/blog/login/', 'text/turtle');
 
 INSERT INTO Seed (seedURI) VALUES ('https://jennings.info/terms/');
 INSERT INTO CrawlSeeds(seedURI, crawlId) VALUES ('https://jennings.info/terms/', 2);
@@ -62,12 +65,14 @@ INSERT INTO CrawlSeeds(seedURI, crawlId) VALUES ('https://www.reynolds.com/', 3)
 INSERT INTO FailedSeed(seedURI, crawlId, statusCode) VALUES ('https://www.reynolds.com/', 3, '404');
 
 INSERT INTO Seed (seedURI) VALUES ('http://www.smith-cox.com/main/wp-content/wp-content/faq.php');
+INSERT INTO Link (crawlId, address, originSeedURI) VALUES (3, 'http://www.smith-cox.com/main/wp-content/wp-content/faq', ' http://www.smith-cox.com/main/wp-content/wp-content/faq.php');
 INSERT INTO CrawlSeeds(seedURI, crawlId) VALUES ('http://www.smith-cox.com/main/wp-content/wp-content/faq.php', 3);
-INSERT INTO RdfURI(crawlId, rdfSeedURI, originSeedURI) VALUES (3, 'http://www.smith-cox.com/main/wp-content/wp-content/faq', ' http://www.smith-cox.com/main/wp-content/wp-content/faq.php');
+INSERT INTO RdfURI(crawlId, rdfSeedURI, originSeedURI, contentFormat) VALUES (3, 'http://www.smith-cox.com/main/wp-content/wp-content/faq', ' http://www.smith-cox.com/main/wp-content/wp-content/faq.php', 'application/rdf+xml');
 
 INSERT INTO Seed (seedURI) VALUES ('http://banks.com/home.htm');
+INSERT INTO Link (crawlId, address, originSeedURI) VALUES  (3, 'http://banks.com/home', 'http://banks.com/home.htm');
 INSERT INTO CrawlSeeds(seedURI, crawlId) VALUES ('http://banks.com/home.htm', 3);
-INSERT INTO RdfURI(crawlId, rdfSeedURI, originSeedURI) VALUES (3, 'http://banks.com/home', 'http://banks.com/home.htm');
+INSERT INTO RdfURI(crawlId, rdfSeedURI, originSeedURI, contentFormat) VALUES (3, 'http://banks.com/home', 'http://banks.com/home.htm', 'application/rdf+xml');
 
 INSERT INTO Seed (seedURI) VALUES ('https://www.poole-blair.org/home.php');
 INSERT INTO CrawlSeeds(seedURI, crawlId) VALUES ('https://www.poole-blair.org/home.php', 3);
