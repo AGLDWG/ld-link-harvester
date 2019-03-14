@@ -11,6 +11,9 @@ class LDHarvesterDatabaseConnector(sqlite3.Connection):
         response = self.cursor.execute("SELECT MAX(crawlid) FROM Crawl")
         return response.fetchall()[0][0] + 1
 
+    def end_crawl(self, crawlid):
+        self.cursor.execute("UPDATE Crawl SET endDate=strftime('%s','now') WHERE crawlId={crawlId}".format(crawlId=crawlid))
+
     def insert_crawl_seed(self, uri, crawlid):
         self.insert_seed(uri)
         try:
@@ -81,6 +84,8 @@ if __name__ == '__main__':
     connector.insert_link('www.google.com/data.rdf', crawlid, 'www.google.com')
     connector.insert_valid_rdfuri('www.google.com/data.rdf', crawlid, 'google.com', 'application/rdf+xml')
     connector.insert_link('www.google.com/no_data.rdf', crawlid, 'www.google.com', 1)
-
+    from time import sleep
+    sleep(2)
+    connector.end_crawl(crawlid)
     connector.commit()
     connector.close()
