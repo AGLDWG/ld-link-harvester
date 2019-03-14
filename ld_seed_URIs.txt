@@ -1,4 +1,0 @@
-http://gnafld.net/index.ttl
-http://vocabs.gsq.cat/vocabulary/
-http://linked.data.gov.au/def/agrif
-http://vocabs.gsq.cat/object?vocab_id=method-type&uri=http%3A//test.linked.data.gov.au/def/gsq-method-type%23Pyrolysis_Analysis
