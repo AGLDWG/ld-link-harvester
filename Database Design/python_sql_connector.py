@@ -25,6 +25,9 @@ class LDHarvesterDatabaseConnector(sqlite3.Connection):
                 print("'{}' Already in Seeds!".format(uri))
 
     def insert_link(self, uri, crawlid, source, failed=0):
+        if failed not in [0,1]:
+            print("Warning! 'failed' parameter should be 0 or 1. Making it 1.")
+            failed = 1
         try:
             self.cursor.execute(
                 "Insert INTO Link (address, crawlId, originSeedURI, failed) VALUES ('{uri}', '{crawlId}', '{source}', {failed})".format(uri=uri, crawlId=crawlid, source=source, failed=failed))
