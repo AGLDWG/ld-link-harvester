@@ -1,3 +1,10 @@
+DROP TABLE IF EXISTS Seed;
+DROP TABLE IF EXISTS Crawl;
+DROP TABLE IF EXISTS CrawlSeeds;
+DROP TABLE IF EXISTS FailedSeed;
+DROP TABLE IF EXISTS Link;
+DROP TABLE IF EXISTS RdfURI;
+
 CREATE TABLE Seed(
 	seedURI VARCHAR(2083) NOT NULL,
 	invalidationDate INTEGER,
@@ -16,10 +23,12 @@ CREATE TABLE Link(
 	originSeedURI VARCHAR(2083) NOT NULL,
 	crawlId VARCHAR(2083) NOT NULL,
 	dateVisited INTEGER DEFAULT (strftime('%s','now')) NOT NULL,
+	failed INTEGER DEFAULT (0) NOT NULL,
 	PRIMARY KEY (address, originSeedURI, crawlId),
 	CONSTRAINT fk_links1 FOREIGN KEY (originSeedURI) REFERENCES Seed (seedURI),
 	CONSTRAINT fk_links2 FOREIGN KEY (crawlID) REFERENCES Crawl (crawlId),
-	CONSTRAINT fk_links3 FOREIGN KEY (originSeedURI) REFERENCES Seed (seedURI)
+	CONSTRAINT fk_links3 FOREIGN KEY (originSeedURI) REFERENCES Seed (seedURI),
+	CONSTRAINT check_failed CHECK (failed in (0, 1))
 );
 
 CREATE TABLE CrawlSeeds(

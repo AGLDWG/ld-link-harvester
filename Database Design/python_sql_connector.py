@@ -1,41 +1,79 @@
 import sqlite3
+__author__ = 'Jake Hashim-Jones'
 
-def insert_seed(uri):
-    try:
-        cursor.execute("INSERT INTO Seed (seedURI) VALUES ('{uri}')".format(uri=uri))
-    except sqlite3.Error as er:
-        print(er, end='...')
-        if str(er) == 'UNIQUE constraint failed: Seed.seedURI':
-            print("'{}' Already In Seeds!".format(uri))
 
-def insert_link(uri, crawlId, source):
-    pass
+class LDHarvesterDatabaseConnector(sqlite3.Connection):
+    def __init__(self, file):
+        super().__init__(file)
+        self.cursor = sqlite3.Cursor(self)
 
-def insert_crawl(crawlId):
-    cursor.execute("INSERT INTO Crawl (crawlId) VALUES ({crawlId})".format(crawlId=crawlId))
+    def insert_crawl_seed(self, uri, crawlid):
+        self.insert_seed(uri)
+        try:
+            self.cursor.execute("INSERT INTO CrawlSeeds (seedURI, crawlId) VALUES ('{uri}', {crawlId})".format(uri=uri, crawlId=crawlid))
+        except sqlite3.Error as er:
+            print(er, end='\n\t...')
+            if str(er) == 'UNIQUE constraint failed: CrawlSeeds.seedURI, CrawlSeeds.crawlId':
+                print("Already tested the '{}' seed during this crawl.".format(uri))
 
-def insert_valid_rdfuri(uri, crawlId, source, format):
-    insert_seed(source)
-    insert_link(uri, crawlId, source)
-    try:
-        cursor.execute("INSERT INTO RdfURI (rdfSeedURI, crawlId, originSeedURI, contentFormat) VALUES ('{uri}', {crawlId}, '{source}', '{format}')".format(uri=uri, crawlId=crawlId, source=source, format=format))
-    except sqlite3.Error as er:
-        print(er, end='...')
-        if str(er) == 'UNIQUE constraint failed: RdfURI.rdfSeedURI, RdfURI.originSeedURI':
-            print("'{}' - '{}' pair is already discovered in this crawl! Ignoring.".format(uri, source))
+    def insert_seed(self, uri):
+        try:
+            self.cursor.execute("INSERT INTO Seed (seedURI) VALUES ('{uri}')".format(uri=uri))
+        except sqlite3.Error as er:
+            print(er, end='\n\t...')
+            if str(er) == 'UNIQUE constraint failed: Seed.seedURI':
+                print("'{}' Already in Seeds!".format(uri))
 
-def insert_failed_seed(uri, crawlId, code):
-    insert_seed(uri)
-    try:
-        cursor.execute("INSERT INTO FailedSeed (seedURI, crawlId, statusCode) VALUES ('{uri}', {crawlId}, '{code}')".format(uri=uri, crawlId=crawlId, code=code))
-    except sqlite3.Error as er:
-        print(er)
+    def insert_link(self, uri, crawlid, source, failed=0):
+        try:
+            self.cursor.execute(
+                "Insert INTO Link (address, crawlId, originSeedURI, failed) VALUES ('{uri}', '{crawlId}', '{source}', {failed})".format(uri=uri, crawlId=crawlid, source=source, failed=failed))
+        except sqlite3.Error as er:
+            print(er, end='\n\t...')
+            if str(er) == 'UNIQUE constraint failed: Link.address, Link.originSeedURI, Link.crawlId':
+                print("'{}' Already visited in this crawl through this seed. Ignoring.".format(uri))
 
-if __name__=='__main__':
-    connector = sqlite3.Connection('/home/jake/MEGA/CSIRO/ld-link-harvester/ld-database.db')
-    cursor = sqlite3.Cursor(connector)
+    def insert_crawl(self, crawlid):
+        try:
+            self.cursor.execute("INSERT INTO Crawl (crawlId) VALUES ({crawlId})".format(crawlId=crawlid))
+        except sqlite3.Error as er:
+            print(er)
+            if str(er) == 'UNIQUE constraint failed: Crawl.crawlId':
+                print('\t...crawlId exists.')
+            print('Critical Error.')
+            print('Exiting!')
+            exit(1)
 
-    insert_valid_rdfuri('www.google.com/data.rdf', 1, 'google.com')
-    insert_failed_seed('www.nothing.com', 1, '404')
+    def insert_valid_rdfuri(self, uri, crawlid, source, response_format):
+        try:
+            self.cursor.execute(
+                "INSERT INTO RdfURI (rdfSeedURI, crawlId, originSeedURI, contentFormat) VALUES ('{uri}', {crawlId}, '{source}', '{format}')".format(uri=uri, crawlId=crawlid, source=source, format=response_format))
+        except sqlite3.Error as er:
+            print(er, end='\n\t...')
+            if str(er) == 'UNIQUE constraint failed: RdfURI.rdfSeedURI, RdfURI.originSeedURI, RdfURI.crawlId':
+                print("'{}' - '{}' pair is already discovered in this crawl! Ignoring.".format(uri, source))
+
+    def insert_failed_seed(self, uri, crawlid, code):
+        try:
+            self.cursor.execute(
+                "INSERT INTO FailedSeed (seedURI, crawlId, statusCode) VALUES ('{uri}', {crawlId}, '{code}')".format(
+                    uri=uri, crawlId=crawlid, code=code))
+        except sqlite3.Error as er:
+            print(er, end='\n\t...')
+            if str(er) == 'UNIQUE constraint failed: FailedSeed.seedURI, FailedSeed.crawlId':
+                print("Already attempted and failed to request '{}' during this crawl. Ignoring.".format(uri))
+
+
+if __name__ == '__main__':
+    crawlid = 1
+    connector = LDHarvesterDatabaseConnector('..\ld-database.db')
+    connector.insert_crawl(crawlid)
+    connector.insert_crawl_seed('www.nothing.com', crawlid)
+    connector.insert_failed_seed('www.nothing.com', crawlid, '404')
+    connector.insert_crawl_seed('www.google.com', crawlid)
+    connector.insert_link('www.google.com/data.rdf', crawlid, 'www.google.com')
+    connector.insert_valid_rdfuri('www.google.com/data.rdf', crawlid, 'google.com', 'application/rdf+xml')
+    connector.insert_link('www.google.com/no_data.rdf', crawlid, 'www.google.com', 1)
+
     connector.commit()
     connector.close()

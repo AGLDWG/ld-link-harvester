@@ -1,0 +1,17 @@
+Consider the following when writing/improving the crawler in 
+the current and later versions:
+
+- Filtering out unnecessary file links (e.g. .jpg files)
+- Working with multiple document types that may contain links 
+(i.e. more than just html?)
+- Consider best way to store input and output URIs (as 
+plaintext, csv, etc.)
+- Need to deal with duplicate links.
+- When dealing with larger link sets, perhaps add links to 
+file in per each top level domain (i.e. rather than store them 
+all in memory and dump them to disk in the end).
+- Script (1st GEN) will handle a small number of requests, 
+however may need reworking to handle multithreading with a 
+large number of seeds.
+- - Could just multithread within each of the top 
+level domains?
