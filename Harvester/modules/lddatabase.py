@@ -9,13 +9,20 @@ class LDHarvesterDatabaseConnector(sqlite3.Connection):
 
     def get_new_crawlid(self):
         response = self.cursor.execute("SELECT MAX(crawlid) FROM Crawl")
-        return response.fetchall()[0][0] + 1
+        resp = response.fetchall()[0][0]
+        if resp is None:
+            new_crawlid = 0
+            print('yes')
+        else:
+            new_crawlid = resp + 1
+        return new_crawlid
 
     def end_crawl(self, crawlid):
         self.cursor.execute("UPDATE Crawl SET endDate=strftime('%s','now') WHERE crawlId={crawlId}".format(crawlId=crawlid))
 
-    def insert_crawl_seed(self, uri, crawlid):
-        self.insert_seed(uri)
+    def insert_crawl_seed(self, uri, crawlid, newseed=0):
+        if newseed:
+            self.insert_seed(uri)
         try:
             self.cursor.execute("INSERT INTO CrawlSeeds (seedURI, crawlId) VALUES ('{uri}', {crawlId})".format(uri=uri, crawlId=crawlid))
         except sqlite3.Error as er:

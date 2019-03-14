@@ -1,6 +1,10 @@
+http://reference.data.gov.au/def/ont/dataset
+http://catalogue.linked.data.gov.au
+http://metadata-standards.org/11179/
+http://linked.data.gov.au/
+http://test.linked.data.gov.au/def/gsq-method-type#Pyrolysis_Analysis
 https://www.csiro.au
 https://data.csiro.au
-http://linked.data.gov.au/dataset/asgs
 http://gnafld.net/index.ttl
 http://data.naa.gov.au
 https://data.naa.gov.au/def/agift.html
@@ -12,7 +16,6 @@ http://linked.data.gov.au/def/agrif
 http://linked.data.gov.au/nothing
 http://vocabs.gsq.cat
 http://vocabs.gsq.cat/object?vocab_id=method-type&uri=http%3A//test.linked.data.gov.au/def/gsq-method-type%23Pyrolysis_Analysis
-http://test.linked.data.gov.au/def/gsq-method-type#Pyrolysis_Analysis
 http://directory.gov.au
 http://www.nonexistent.gov.au
 https://researchdata.ands.org.au/
