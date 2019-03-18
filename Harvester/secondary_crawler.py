@@ -68,7 +68,6 @@ def find_links_html(response_content, uri, seed, depth=0):
                     if id_detected:
                         continue
             if link not in visited and len(link) > 1 and not re.search(r'#[^\s\/]*\/', link): # Potential issue with the parser and URIs that end up with #maincontent#maincontent#maincontent
-                #print(link)
                 links.append((link, depth, seed))
     #print(links)
     return links
@@ -90,10 +89,6 @@ def make_request(uri, depth, seed, header=global_header):
     print(uri, depth)
     print(response.headers['Content-type'])
     if response.status_code == 200:
-        #history = [response]
-        #history.extend(response.history)
-        #if len(history) > 1:
-        #    uri = history[1].headers['Location']
         dbconnector.insert_link(uri, crawlid, seed)
         dbconnector.commit()
         file_format = response.headers['Content-type'].split(';')[0]
@@ -115,7 +110,6 @@ def make_request(uri, depth, seed, header=global_header):
             return True
         elif file_format == 'text/html':
             try:
-                #visited.append(uri)
                 child_links = find_links_html(response.content, uri, seed, depth+1)
             except Exception as er:
                 print(er, end='...')
@@ -126,7 +120,8 @@ def make_request(uri, depth, seed, header=global_header):
             pass
     else:
         dbconnector.insert_link(uri, crawlid, seed, failed=1)
-        dbconnector.insert_failed_seed(uri, crawlid, response.status_code)
+        if uri == seed:
+            dbconnector.insert_failed_seed(uri, crawlid, response.status_code)
         dbconnector.commit()
         return False
 
