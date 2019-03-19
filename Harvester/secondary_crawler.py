@@ -10,6 +10,7 @@ import signal
 import re
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
+from urllib.parse import urljoin
 from modules.lddatabase import LDHarvesterDatabaseConnector
 
 URI_in_file = 'single_URI.txt'
@@ -38,11 +39,9 @@ global_header = {
 }
 recursion_depth_limit = 4 # Can turn off limit if set to -1
 
-
 def find_links_html(response_content, uri, seed, depth=0):
     # Function to parse links from a web document (presumably html)
-    parsed_uri = urlparse(uri)
-    netloc = '{uri.netloc}'.format(uri=parsed_uri).strip('www.')
+    #uri = '{uri.scheme}://{uri.netloc}'.format(uri=urlparse(uri))
     links = []
     soup = BeautifulSoup(response_content, "lxml")
     all = soup.findAll()
@@ -51,32 +50,20 @@ def find_links_html(response_content, uri, seed, depth=0):
         ids.append(item.get('id'))
     for link in soup.findAll('a'):
         link = link.get('href')
+        link = urljoin(uri, link)
         if isinstance(link, str):
-            if link in visited:
-                 continue
-            if link.startswith('/') and len(link) > 1:
-                link = uri + link
-            elif link.startswith('#') and len(link) > 1:
-                link = uri.split('#')[0] + link
-                search = (re.findall(r'#[^\s\/]*', link))
-                if len(search) > 0:
-                    id_detected = False
-                    for result in search:
-                        if result.strip('#') in ids:
-                            id_detected = True
-                            break
-                    if id_detected:
-                        continue
-            if link not in visited and len(link) > 1 and not re.search(r'#[^\s\/]*\/', link): # Potential issue with the parser and URIs that end up with #maincontent#maincontent#maincontent
+            if link.strip('/#') not in visited:
                 links.append((link, depth, seed))
     #print(links)
     return links
 
 
 def make_request(uri, depth, seed, header=global_header):
+    #print(len(visited))
     try:
-        if depth <= recursion_depth_limit:
+        if depth <= recursion_depth_limit and uri not in visited:
             response = requests.get(uri, headers=header)
+            visited[uri.strip('/#')] = True
         else:
             return False
     except:
@@ -93,17 +80,13 @@ def make_request(uri, depth, seed, header=global_header):
         dbconnector.commit()
         file_format = response.headers['Content-type'].split(';')[0]
         if uri.split('.')[-1] in rdf_file_ending:
-            ld_seed_URIs.append(uri)
-            visited.append(uri)
-            dbconnector.insert_valid_rdfuri(uri, crawlid, seed, format)
+            dbconnector.insert_valid_rdfuri(uri, crawlid, seed, file_format)
             dbconnector.commit()
             with open(URI_out_file, 'a') as dump:
                 dump.write(uri + '\n')
             return True
         if file_format in rdf_media_types:
-            ld_seed_URIs.append(uri)
-            visited.append(uri)
-            dbconnector.insert_valid_rdfuri(uri, crawlid, seed, format)
+            dbconnector.insert_valid_rdfuri(uri, crawlid, seed, file_format)
             dbconnector.commit()
             with open(URI_out_file, 'a') as dump:
                 dump.write(uri + '\n')
@@ -116,7 +99,7 @@ def make_request(uri, depth, seed, header=global_header):
                 print('Cannot decode response from {}. Continuing'.format(uri))
                 return False
             bulk_request(child_links)
-        elif file_format == 'application/xhtml+xml':
+        elif file_format in ['application/xhtml+xml']:
             pass
     else:
         dbconnector.insert_link(uri, crawlid, seed, failed=1)
@@ -141,20 +124,20 @@ def close():
     print("Connection Closed.")
 
 
-ld_seed_URIs = []
-visited = []
-open(URI_out_file, 'w').close()
-dbconnector = LDHarvesterDatabaseConnector(database_file)
-crawlid = dbconnector.get_new_crawlid()
-dbconnector.insert_crawl(crawlid)
-signal.signal(signal.SIGTERM, close)
-signal.signal(signal.SIGINT, close)
+if __name__ == '__main__':
+    visited = {}
+    open(URI_out_file, 'w').close()
+    dbconnector = LDHarvesterDatabaseConnector(database_file)
+    crawlid = dbconnector.get_new_crawlid()
+    dbconnector.insert_crawl(crawlid)
+    signal.signal(signal.SIGTERM, close)
+    signal.signal(signal.SIGINT, close)
 
-try:
-    initial_URI_list = [(URI.strip(), 0, URI.strip()) for URI in open(URI_in_file, 'r')]
-    bulk_request(initial_URI_list)
-except Exception as er:
-    print(er)
+    try:
+        initial_URI_list = [(URI.strip(), 0, URI.strip()) for URI in open(URI_in_file, 'r')]
+        bulk_request(initial_URI_list)
+    except Exception as er:
+        print(er)
+        close()
+        exit(1)
     close()
-    exit(1)
-close()
