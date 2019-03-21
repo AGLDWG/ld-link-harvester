@@ -6,7 +6,7 @@ http://test.linked.data.gov.au/def/gsq-method-type#Pyrolysis_Analysis
 https://www.csiro.au
 https://data.csiro.au
 http://gnafld.net/index.ttl
-http://data.naa.gov.au
+https://data.naa.gov.au
 https://data.naa.gov.au/def/agift.html
 https://data.naa.gov.au/def/agift/Gaming-industry-regulation.html
 https://data.gov.au
