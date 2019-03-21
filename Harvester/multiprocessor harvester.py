@@ -1,8 +1,10 @@
 import requests
 from multiprocessing import Queue, Process, Manager
 import time
+from bs4 import BeautifulSoup
+from urllib.parse import urljoin
 
-URL_BATCH = [url.strip() for url in open('single_URI.txt')]
+URL_BATCH = [(url.strip(), 0, url.strip()) for url in open('single_URI.txt')]
 PROC_COUNT = 8
 RDF_MEDIA_TYPES = [
     "application/rdf+xml",
@@ -26,6 +28,56 @@ GLOBAL_HEADER = {
     'User-Agent': 'LD Link Harvester'
 }
 #print(URL_BATCH)
+def find_links_html(response_content, uri, seed, depth=0):
+    # Function to parse links from a web document (presumably html)
+    #uri = '{uri.scheme}://{uri.netloc}'.format(uri=urlparse(uri))
+    links = []
+    soup = BeautifulSoup(response_content, "lxml")
+    all = soup.findAll()
+    ids = []
+    for item in all:
+        ids.append(item.get('id'))
+    for link in soup.findAll('a'):
+        link = link.get('href')
+        link = urljoin(uri, link)
+        if isinstance(link, str):
+            #if link.strip('/#') not in visited:
+            links.append((link, depth, seed))
+    #print(links)
+    return links
+
+def process_response(response, uri, seed, depth):
+    if response.status_code == 200:
+        #dbconnector.insert_link(uri, crawlid, seed)
+        #dbconnector.commit()
+        file_format = response.headers['Content-type'].split(';')[0]
+        if uri.split('.')[-1] in RDF_FORMATS:
+            #dbconnector.insert_valid_rdfuri(uri, crawlid, seed, file_format)
+            #dbconnector.commit()
+            return True
+        if file_format in RDF_MEDIA_TYPES:
+            #dbconnector.insert_valid_rdfuri(uri, crawlid, seed, file_format)
+            #dbconnector.commit()
+            return True
+        elif file_format == 'text/html':
+            try:
+                child_links = []
+                child_links = find_links_html(response.content, uri, seed, depth+1)
+                return child_links
+            except Exception as er:
+                print(er, end='...')
+                print('Cannot decode response from {}. Continuing'.format(uri))
+                return False
+        elif file_format in ['application/xhtml+xml']:
+            pass
+    else:
+        #dbconnector.insert_link(uri, crawlid, seed, failed=1)
+        if uri == seed:
+            pass
+            #dbconnector.insert_failed_seed(uri, crawlid, response.status_code)
+            #dbconnector.commit()
+        return False
+
 start_sentinal = "start"
 end_sentinal = "end"
 def worker_fn(p, in_queue, out_queue, visited):
@@ -33,16 +85,22 @@ def worker_fn(p, in_queue, out_queue, visited):
     out_queue.put(start_sentinal)
     while not in_queue.empty():
         url = in_queue.get()
-        #print("Process: {}, getting: {}".format(p, url))
+        url, depth, seed = url
         try:
             if url not in visited:
                 resp = requests.get(url, headers=GLOBAL_HEADER)
                 visited[url.strip('/#')] = True
             else:
                 resp = None
+                continue
         except Exception as e:
             resp = None
             out_queue.put((url, e))
+            continue
+        processed_response = process_response(resp, url, seed, depth)
+        if processed_response:
+            if isinstance(processed_response, list):
+                [in_queue.put((child[0], child[1], child[2])) for child in processed_response]
         if resp:
             out_queue.put((url, resp))
     print("Process {} done.".format(p))
@@ -50,10 +108,11 @@ def worker_fn(p, in_queue, out_queue, visited):
     raise SystemExit(0)
 
 if __name__ == "__main__":
-    visited = Manager().dict()
-    work_queue = Queue()
+    manager = Manager()
+    visited = manager.dict()
+    work_queue = manager.Queue()
     [work_queue.put(i) for i in URL_BATCH]
-    resp_queue = Queue()
+    resp_queue = manager.Queue()
     worker_procs = []
     for i in range(PROC_COUNT):
         p = Process(target=worker_fn, args=(i+1, work_queue, resp_queue, visited))
