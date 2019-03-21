@@ -199,7 +199,10 @@ if __name__ == "__main__":
             if opcode == 2:
                 dbconnector.insert_link(uri=resp_tuple[0]['url'], crawlid=crawlid, source=resp_tuple[0]['params']['source'], failed=resp_tuple[0]['params']['failed'])
                 if resp_tuple[0]['params']['failed'] == 1 and resp_tuple[0]['url'] == resp_tuple[0]['params']['source']:
-                    dbconnector.insert_failed_seed(uri=resp_tuple[0]['url'], crawlid=crawlid, code=resp_tuple[1].status_code)
+                    if isinstance(resp_tuple[1], Exception):
+                        dbconnector.insert_failed_seed(uri=resp_tuple[0]['url'], crawlid=crawlid, code='000')
+                    else:
+                        dbconnector.insert_failed_seed(uri=resp_tuple[0]['url'], crawlid=crawlid, code=resp_tuple[1].status_code)
             if opcode == 3:
                 dbconnector.insert_valid_rdfuri(uri=resp_tuple[0]['url'], crawlid=crawlid, source=resp_tuple[0]['params']['source'], response_format=resp_tuple[0]['params']['format'])
         if isinstance(resp_tuple[1], Exception):
