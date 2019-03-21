@@ -60,19 +60,13 @@ def find_links_html(response_content, uri, seed, depth=0):
 
 def process_response(response, uri, seed, depth):
     if response.status_code == 200:
-        #dbconnector.insert_link(uri, crawlid, seed)
-        #dbconnector.commit()
         file_format = response.headers['Content-type'].split(';')[0]
         if uri.split('.')[-1] in RDF_FORMATS:
-            #dbconnector.insert_valid_rdfuri(uri, crawlid, seed, file_format)
-            #dbconnector.commit()
             enhanced_resp = {'url': uri,
                              'opcode': 3,
                              'params':  {'source': seed, 'format': file_format}}
             return enhanced_resp
         if file_format in RDF_MEDIA_TYPES:
-            #dbconnector.insert_valid_rdfuri(uri, crawlid, seed, file_format)
-            #dbconnector.commit()
             enhanced_resp = {'url': uri,
                              'opcode': 3,
                              'params': {'source': seed, 'format': file_format}}
@@ -97,7 +91,6 @@ def process_response(response, uri, seed, depth):
                              'params': {'source': seed, 'failed': 0}}
             return enhanced_resp
     else:
-        #dbconnector.insert_link(uri, crawlid, seed, failed=1)
         enhanced_resp = {'url': uri,
                          'opcode': 2,
                          'params': {'source': seed, 'failed': 1}}
@@ -121,28 +114,17 @@ def worker_fn(p, in_queue, out_queue, visited):
             else:
                 continue
         except Exception as e:
-            if url == seed:  # Move this somewhere else??
-                enhanced_resp = {'url': url,
-                                 'opcode': 1,
-                                 'params': {'source': seed, 'failed': 1}}
-                # dbconnector.insert_failed_seed(uri, crawlid, response.status_code)
-                # dbconnector.commit()
-                out_queue.put((enhanced_resp, e))
-            else:
-                enhanced_resp = {'url': url,
-                                 'opcode': 2,
-                                 'params': {'source': seed, 'failed': 1}}
-                out_queue.put((enhanced_resp, e))
-            #Insert Failed Response, Insert Link OR Insert Failed Seed
+            enhanced_resp = {'url': url,
+                             'opcode': 2,
+                             'params': {'source': seed, 'failed': 1}}
+            out_queue.put((enhanced_resp, e))
             continue
         processed_response = process_response(resp, url, seed, depth)
         if isinstance(processed_response, tuple):
             [in_queue.put((child[0], child[1], child[2])) for child in processed_response[1]]
             out_queue.put((processed_response[0], resp))
-            #Insert Link
         else:
             out_queue.put((processed_response, resp))
-            #Insert RDF Data OR Insert Seed
     print("Process {} done.".format(p))
     out_queue.put(end_sentinal)
     raise SystemExit(0)
