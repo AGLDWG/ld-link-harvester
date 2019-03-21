@@ -3,8 +3,10 @@ from multiprocessing import Queue, Process, Manager
 import time
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
+from modules.lddatabase import LDHarvesterDatabaseConnector
 
 URL_BATCH = [(url.strip(), 0, url.strip()) for url in open('single_URI.txt')]
+DATABASE_FILE = 'ld-database.db'
 PROC_COUNT = 8
 RDF_MEDIA_TYPES = [
     "application/rdf+xml",
@@ -30,7 +32,6 @@ GLOBAL_HEADER = {
 #print(URL_BATCH)
 def find_links_html(response_content, uri, seed, depth=0):
     # Function to parse links from a web document (presumably html)
-    #uri = '{uri.scheme}://{uri.netloc}'.format(uri=urlparse(uri))
     links = []
     soup = BeautifulSoup(response_content, "lxml")
     all = soup.findAll()
@@ -54,29 +55,50 @@ def process_response(response, uri, seed, depth):
         if uri.split('.')[-1] in RDF_FORMATS:
             #dbconnector.insert_valid_rdfuri(uri, crawlid, seed, file_format)
             #dbconnector.commit()
-            return True
+            enhanced_resp = {'url': uri,
+                             'opcode': 3,
+                             'params':  {'source': seed, 'format': file_format}}
+            return enhanced_resp
         if file_format in RDF_MEDIA_TYPES:
             #dbconnector.insert_valid_rdfuri(uri, crawlid, seed, file_format)
             #dbconnector.commit()
-            return True
+            enhanced_resp = {'url': uri,
+                             'opcode': 3,
+                             'params': {'source': seed, 'format': file_format}}
+            return enhanced_resp
         elif file_format == 'text/html':
             try:
-                child_links = []
                 child_links = find_links_html(response.content, uri, seed, depth+1)
-                return child_links
+                enhanced_resp = {'url': uri,
+                                 'opcode': 2,
+                                 'params': {'source': seed, 'failed': 0}}
+                return enhanced_resp, child_links
             except Exception as er:
                 print(er, end='...')
                 print('Cannot decode response from {}. Continuing'.format(uri))
-                return False
-        elif file_format in ['application/xhtml+xml']:
-            pass
+                enhanced_resp = {'url': uri,
+                                 'opcode': 2,
+                                 'params': {'source': seed, 'failed': 1}}
+                return enhanced_resp
+        else:
+            enhanced_resp = {'url': uri,
+                             'opcode': 2,
+                             'params': {'source': seed, 'failed': 0}}
+            return enhanced_resp
     else:
         #dbconnector.insert_link(uri, crawlid, seed, failed=1)
-        if uri == seed:
-            pass
+        if uri == seed: #Move this somewhere else??
+            enhanced_resp = {'url': uri,
+                             'opcode': 1,
+                             'params': {'source': seed, 'failed': 1}}
             #dbconnector.insert_failed_seed(uri, crawlid, response.status_code)
             #dbconnector.commit()
-        return False
+            return enhanced_resp
+        else:
+            enhanced_resp = {'url': uri,
+                             'opcode': 2,
+                             'params': {'source': seed, 'failed': 1}}
+            return enhanced_resp
 
 start_sentinal = "start"
 end_sentinal = "end"
@@ -88,26 +110,42 @@ def worker_fn(p, in_queue, out_queue, visited):
         url, depth, seed = url
         try:
             if url not in visited:
-                resp = requests.get(url, headers=GLOBAL_HEADER)
                 visited[url.strip('/#')] = True
+                resp = requests.get(url, headers=GLOBAL_HEADER)
             else:
-                resp = None
                 continue
         except Exception as e:
-            resp = None
-            out_queue.put((url, e))
+            if url == seed:  # Move this somewhere else??
+                enhanced_resp = {'url': url,
+                                 'opcode': 1,
+                                 'params': {'source': seed, 'failed': 1}}
+                # dbconnector.insert_failed_seed(uri, crawlid, response.status_code)
+                # dbconnector.commit()
+                out_queue.put((enhanced_resp, e))
+            else:
+                enhanced_resp = {'url': url,
+                                 'opcode': 2,
+                                 'params': {'source': seed, 'failed': 1}}
+                out_queue.put((enhanced_resp, e))
+            #Insert Failed Response, Insert Link OR Insert Failed Seed
             continue
         processed_response = process_response(resp, url, seed, depth)
-        if processed_response:
-            if isinstance(processed_response, list):
-                [in_queue.put((child[0], child[1], child[2])) for child in processed_response]
-        if resp:
-            out_queue.put((url, resp))
+        if isinstance(processed_response, tuple):
+            [in_queue.put((child[0], child[1], child[2])) for child in processed_response[1]]
+            out_queue.put((processed_response[0], resp))
+            #Insert Link
+        else:
+            out_queue.put((processed_response, resp))
+            #Insert RDF Data OR Insert Seed
     print("Process {} done.".format(p))
     out_queue.put(end_sentinal)
     raise SystemExit(0)
 
 if __name__ == "__main__":
+    dbconnector = LDHarvesterDatabaseConnector(DATABASE_FILE)
+    crawlid = dbconnector.get_new_crawlid()
+    dbconnector.insert_crawl(crawlid)
+
     manager = Manager()
     visited = manager.dict()
     work_queue = manager.Queue()
@@ -135,9 +173,9 @@ if __name__ == "__main__":
             else:
                 continue
         if isinstance(resp_tuple[1], Exception):
-            print("{} : {}".format(str(resp_tuple[0]), str(resp_tuple[1])))
+            print("{} : {}".format(str(resp_tuple[0]['url']), str(resp_tuple[1])))
         else:
-            print("{} : {}".format(str(resp_tuple[0]), str(resp_tuple[1].status_code)))
+            print("{} : {}".format(str(resp_tuple[0]['url']), str(resp_tuple[1].status_code)))
     [p.join() for p in worker_procs]
     end = time.time()
     print(visited)

@@ -41,7 +41,6 @@ recursion_depth_limit = 4 # Can turn off limit if set to -1
 
 def find_links_html(response_content, uri, seed, depth=0):
     # Function to parse links from a web document (presumably html)
-    #uri = '{uri.scheme}://{uri.netloc}'.format(uri=urlparse(uri))
     links = []
     soup = BeautifulSoup(response_content, "lxml")
     all = soup.findAll()
