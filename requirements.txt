@@ -1,5 +1,10 @@
 requests
-threading
-urllib
-lxml
+multiprocessing
+time
+signal
+sqlite3
+os
 bs4
+urllib
+pandas
+sqlite3
