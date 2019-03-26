@@ -12,7 +12,6 @@ class LDHarvesterDatabaseConnector(sqlite3.Connection):
         resp = response.fetchall()[0][0]
         if resp is None:
             new_crawlid = 0
-            print('yes')
         else:
             new_crawlid = resp + 1
         return new_crawlid
@@ -38,13 +37,13 @@ class LDHarvesterDatabaseConnector(sqlite3.Connection):
             if str(er) == 'UNIQUE constraint failed: Seed.seedURI':
                 print("'{}' Already in Seeds!".format(uri))
 
-    def insert_link(self, uri, crawlid, source, failed=0):
+    def insert_link(self, uri, crawlid, source, content_format, failed=0):
         if failed not in [0,1]:
             print("Warning! 'failed' parameter should be 0 or 1. Making it 1.")
             failed = 1
         try:
             self.cursor.execute(
-                "Insert INTO Link (address, crawlId, originSeedURI, failed) VALUES ('{uri}', '{crawlId}', '{source}', {failed})".format(uri=uri, crawlId=crawlid, source=source, failed=failed))
+                "Insert INTO Link (address, crawlId, originSeedURI, contentFormat, failed) VALUES ('{uri}', '{crawlId}', '{source}','{contentFormat}', {failed})".format(uri=uri, crawlId=crawlid, source=source, contentFormat=content_format, failed=failed))
         except sqlite3.Error as er:
             print(er, end='\n\t...')
             if str(er) == 'UNIQUE constraint failed: Link.address, Link.originSeedURI, Link.crawlId':

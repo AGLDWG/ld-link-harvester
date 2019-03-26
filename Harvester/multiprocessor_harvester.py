@@ -30,10 +30,10 @@ RDF_FORMATS = [
     'ttl',
     'n3',
     'nt',
-    'json'  # candidate
+    'json'
 ]
 GLOBAL_HEADER = {
-    'Accept': ",".join(RDF_FORMATS),
+    'Accept': ",".join(RDF_MEDIA_TYPES),
     'User-Agent': 'LD Link Harvester'
 }
 
