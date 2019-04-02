@@ -7,4 +7,4 @@ os
 bs4
 urllib
 pandas
-sqlite3
+lxml
