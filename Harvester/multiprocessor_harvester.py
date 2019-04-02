@@ -179,9 +179,12 @@ def worker_fn(p, in_queue, out_queue, visited):
 
 if __name__ == "__main__":
     dbconnector, crawlid = connect()
+    print("Adding seeds to database.")
+    dbconnector.insert_seed_bulk(URL_BATCH)
+    dbconnector.commit()
+    print("Seeds added to database.")
     signal.signal(signal.SIGTERM, close)
     signal.signal(signal.SIGINT, close)
-
     manager = Manager()
     visited = manager.dict()
     work_queue = manager.Queue()
@@ -232,6 +235,7 @@ if __name__ == "__main__":
                     else:
                         dbconnector.insert_failed_seed(uri=resp_tuple[0]['url'], crawlid=crawlid,  code=resp_tuple[1].status_code)
             if opcode == 3:
+                dbconnector.insert_link(uri=resp_tuple[0]['url'], crawlid=crawlid, source=resp_tuple[0]['params']['source'],content_format=resp_tuple[0]['params']['format'], failed=0)
                 dbconnector.insert_valid_rdfuri(uri=resp_tuple[0]['url'], crawlid=crawlid, source=resp_tuple[0]['params']['source'], response_format=resp_tuple[0]['params']['format'])
         #print(resp_tuple)
         if isinstance(resp_tuple[1], Exception):

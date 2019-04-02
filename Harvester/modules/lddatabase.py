@@ -29,6 +29,16 @@ class LDHarvesterDatabaseConnector(sqlite3.Connection):
             if str(er) == 'UNIQUE constraint failed: CrawlSeeds.seedURI, CrawlSeeds.crawlId':
                 print("Already tested the '{}' seed during this crawl.".format(uri))
 
+    def insert_seed_bulk(self, url_list):
+        for url in url_list:
+            try:
+                self.cursor.execute("INSERT INTO Seed (seedURI) VALUES ('{uri}')".format(uri=url[0]))
+            except Exception as er:
+                if str(er) == 'UNIQUE constraint failed: Seed.seedURI':
+                    print("'{}' Already in Seeds!".format(url[0]))
+                else:
+                    print("'{}' Error: {}".format(url[0], er))
+
     def insert_seed(self, uri):
         try:
             self.cursor.execute("INSERT INTO Seed (seedURI) VALUES ('{uri}')".format(uri=uri))
