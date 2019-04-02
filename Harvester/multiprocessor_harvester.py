@@ -7,7 +7,32 @@ import os
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 from modules.lddatabase import LDHarvesterDatabaseConnector
-
+"""
+Current Issues/Notes:
+    Crawler appears to be going out of control to a variety of non-australian websites even at low recursion depth settings (e.g. blog page (home) > facebook > links to non-australian pages)
+    Visited dictionary grows with each run (eventually contributes to exceeding memory). 
+    Expect more memory usage/takeover on a faster internet connection as adding to the resp_queue, work_queue and visited dictionary more rapidly. 
+        --> This is why it was decided to also process the responses in the processes that make the requests.
+            ----> PROS: Resp_queue and visited grow slower (particularly when response time is faster)
+            ----> CONS: Slows down requests
+            ----> NOTES: Work_queue grows more slowly, however still exponentially.
+            
+POTENTIAL IMPROVEMENTS/SOLUTIONS:
+    Flush data to disk rather than holding in RAM (need more analysis to determine what to flush though) -- Matt's Suggestion.
+        --> Visited would be ideal, however this would not be feasible as need to check it in memory (although keep under consideration)
+        --> Flush response tuples directly (rather than putting to a queue) to disk and move them to database with a separate script (or another process).
+            ----> This would stop the resp_queue object from growing so rapidly.
+            ----> Could use the pickle module to store data on HD.
+            ----> PROS: Save space in RAM, even if the harvester stops records are stored on disk, hence they are 'saved' and not lost.
+            ----> CONS: May be slower to flush to disk (or the same speed as sending to the database) -- work with this.
+            ----> NOTES: At this stage, the 
+        -->
+    Restrict the harvester to the domains that we are seeding (i.e. avoid external links).
+        ALTERNATIVE Restrict the recursion depth to other domains (rather than depth in terms of the current search itself)
+        ALTERNATIVE Use two depth limits. One to control the current domain recursion and another to limit how deep recursion into EXTERNAL DOMAINS can go.
+        ALTERNATIVE Still make requests to external links, however do not search recursively for links within them (E.g. if linked data is hosted on an external site, find it only at the direct linked address).
+     
+"""
 URL_BATCH = [(url.strip(), 0, url.strip()) for url in open('single_URI.txt')]
 DATABASE_FILE = 'ld-database.db'
 DATABASE_TEMPLATE = '../database/create_database.sql'
@@ -120,8 +145,8 @@ def process_response(response, uri, seed, depth):
                              'params': {'source': seed, 'format': file_format}}
             return enhanced_resp
         elif file_format == 'text/html':
-            try:
-                child_links = find_links_html(response.content, uri, seed, depth+1)
+            try: # Need to parse out the domain name of the seed and current uri, see if it should go deeper.
+                child_links = find_links_html(response.content, uri, seed, depth+1) # Perhaps have a limiter here to only go into 1 level of depth into external links (see above)
                 enhanced_resp = {'url': uri,
                                  'opcode': 2,
                                  'params': {'source': seed, 'format': file_format, 'failed': 0}}
@@ -183,11 +208,11 @@ if __name__ == "__main__":
     signal.signal(signal.SIGINT, close)
 
     manager = Manager()
-    visited = manager.dict()
-    work_queue = manager.Queue()
+    visited = manager.dict() # GROWS AND DOES NOT SHRINK
+    work_queue = manager.Queue() # Expect to grow rapidly due to the expansive propterty of recursive web-page harvesting.
     [work_queue.put(i) for i in URL_BATCH]
-    resp_queue = manager.Queue()
-    worker_procs = []
+    resp_queue = manager.Queue()    # Expect to grow faster than it shrinks due to multiple threads adding to it and a single thread processing it, however this is dependent on the request threads. (NOT VERIFIED)
+    worker_procs = []               # Items in resp_queue are also much larger now (a tuple consisting of a dictionary and a requests response object) - Memory Issues
     for i in range(PROC_COUNT):
         p = Process(target=worker_fn, args=(i+1, work_queue, resp_queue, visited))
         worker_procs.append(p)
@@ -213,14 +238,7 @@ if __name__ == "__main__":
                 break
             else:
                 continue
-        if isinstance(resp_tuple[0], dict):
-            '''
-            OPCODES: 
-            0 = Insert Seed (Deprecated)
-            1 = Insert Failed Seed (Handled by 2)
-            2 = Insert Link (Failed or otherwise)
-            3 = Insert RDF Data
-            '''
+        if isinstance(resp_tuple[0], dict): # This whole block in another process or script (to read tuples directly from the disk as pickle objects)
             opcode = resp_tuple[0]['opcode']
             if resp_tuple[0]['url'] == resp_tuple[0]['params']['source']:
                 dbconnector.insert_crawl_seed(uri=resp_tuple[0]['url'], crawlid=crawlid)
