@@ -5,7 +5,7 @@ import signal
 import sqlite3
 import os
 from bs4 import BeautifulSoup
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 from modules.lddatabase import LDHarvesterDatabaseConnector
 
 URL_BATCH = [(url.strip(), 0, url.strip()) for url in open('single_URI.txt')]
@@ -121,11 +121,18 @@ def process_response(response, uri, seed, depth):
             return enhanced_resp
         elif file_format == 'text/html':
             try:
-                child_links = find_links_html(response.content, uri, seed, depth+1)
-                enhanced_resp = {'url': uri,
-                                 'opcode': 2,
-                                 'params': {'source': seed, 'format': file_format, 'failed': 0}}
-                return enhanced_resp, child_links
+                #DO NOT FORGET TO MAKE THIS HANDLE REDIRECTS
+                if urlparse(uri).netloc == urlparse(seed).netloc:
+                    child_links = find_links_html(response.content, uri, seed, depth+1)
+                    enhanced_resp = {'url': uri,
+                                    'opcode': 2,
+                                    'params': {'source': seed, 'format': file_format, 'failed': 0}}
+                    return enhanced_resp, child_links
+                else:
+                    enhanced_resp = {'url': uri,
+                                     'opcode': 2,
+                                     'params': {'source': seed, 'format': file_format, 'failed': 0}}
+                    return enhanced_resp
             except Exception as er:
                 print(er, end='...')
                 print('Cannot decode response from {}. Continuing'.format(uri))
