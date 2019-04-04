@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<diagram program="umlet" version="14.3.0">
+  <zoom_level>8</zoom_level>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>0</x>
+      <y>200</y>
+      <w>264</w>
+      <h>152</h>
+    </coordinates>
+    <panel_attributes>/*Crawl*/
+--
+crawlId:  INTEGER
+startDate:  INTEGER
+endDate: INTEGER
+--
+/PRIMARY KEY crawlId/</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>0</x>
+      <y>520</y>
+      <w>264</w>
+      <h>152</h>
+    </coordinates>
+    <panel_attributes>/*Link*/
+--
+address:  VARCHAR(2083)
+originSeedURI:  VARCHAR(2083)
+crawlId:  INTEGER
+dateVisited:  INTEGER
+contentFormat:  VARCHAR(30)
+failed:  INTEGER
+--
+/PRIMARY KEY address, originSeedURI, crawlID/
+/CHECK failed IN [0,1]/
+
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>280</x>
+      <y>0</y>
+      <w>264</w>
+      <h>152</h>
+    </coordinates>
+    <panel_attributes>lt=.
+/*CrawlSeeds*/
+--
+seedURI:  VARCHAR(2083)
+crawlID:  INTEGER
+--
+/PRIMARY KEY crawlId, seedURI/</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>552</x>
+      <y>200</y>
+      <w>264</w>
+      <h>152</h>
+    </coordinates>
+    <panel_attributes>/*Seed*/
+--
+seedURI:  VARCHAR(2083)
+invalidationDate:  INTEGER
+--
+/PRIMARY KEY seedURI/
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>560</x>
+      <y>520</y>
+      <w>264</w>
+      <h>152</h>
+    </coordinates>
+    <panel_attributes>/*FailedSeed*/
+--
+seedURI:  VARCHAR(2083)
+crawlId:  INTEGER
+statusCode:  VARCHAR(3)
+requestDate:  INTEGER
+--
+/PRIMARY KEY seedURI, crawlId/
+
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>0</x>
+      <y>840</y>
+      <w>264</w>
+      <h>152</h>
+    </coordinates>
+    <panel_attributes>/*RdfURI*/
+--
+rdfSeedURI:  VARCHAR(2083)
+originSeedURI:  VARCHAR(2083)
+crawlId:  INTEGER
+contentFormat:  VARCHAR(30)
+--
+/PRIMARY KEY rdfSeedURI, originSeedURI, crawlId/</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>256</x>
+      <y>256</y>
+      <w>312</w>
+      <h>40</h>
+    </coordinates>
+    <panel_attributes>lt=-
+m1=0..n
+m2=0..
+</panel_attributes>
+    <additional_attributes>10.0;20.0;370.0;20.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>400</x>
+      <y>144</y>
+      <w>24</w>
+      <h>144</h>
+    </coordinates>
+    <panel_attributes>lt=.</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;160.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>680</x>
+      <y>344</y>
+      <w>40</w>
+      <h>192</h>
+    </coordinates>
+    <panel_attributes>lt=-
+m1=1..n
+m2=0..1</panel_attributes>
+    <additional_attributes>10.0;220.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>128</x>
+      <y>344</y>
+      <w>40</w>
+      <h>192</h>
+    </coordinates>
+    <panel_attributes>lt=-
+m1=1..n
+m2=0..1
+</panel_attributes>
+    <additional_attributes>10.0;220.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>256</x>
+      <y>344</y>
+      <w>312</w>
+      <h>192</h>
+    </coordinates>
+    <panel_attributes>lt=-
+m1=1..n
+m2=      0..1
+</panel_attributes>
+    <additional_attributes>10.0;220.0;370.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>256</x>
+      <y>344</y>
+      <w>320</w>
+      <h>192</h>
+    </coordinates>
+    <panel_attributes>lt=-
+m1=      0..1
+m2=1..n
+</panel_attributes>
+    <additional_attributes>10.0;10.0;380.0;220.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>120</x>
+      <y>664</y>
+      <w>40</w>
+      <h>192</h>
+    </coordinates>
+    <panel_attributes>lt=-
+m1=1
+m2=0..1
+</panel_attributes>
+    <additional_attributes>10.0;220.0;10.0;10.0</additional_attributes>
+  </element>
+</diagram>
