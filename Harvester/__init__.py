@@ -7,7 +7,7 @@ import sqlite3
 import os
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
-from modules.lddatabase import LDHarvesterDatabaseConnector
+from .lddatabase import LDHarvesterDatabaseConnector
 
 URL_BATCH = [(url.strip(), 0, url.strip()) for url in open('single_URI.txt')]
 WORK_QUEUE_OVERFLOW_FILE = 'overflow_urls.txt'
