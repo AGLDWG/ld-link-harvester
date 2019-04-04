@@ -106,3 +106,9 @@ venv.bak/
 
 # JetBrains
 .idea/
+
+# SQLite DBs
+*.db
+
+# Backup files
+*.bak
