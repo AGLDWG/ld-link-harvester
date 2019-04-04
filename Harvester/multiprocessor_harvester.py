@@ -273,7 +273,7 @@ if __name__ == "__main__":
             break
         else:
             if os.path.isfile(OVERFLOW_FILE):
-                new_urls = [(url.split()[0], url.split()[1], url.split()[2]) for url in open(OVERFLOW_FILE, 'r')]
+                new_urls = [(url.split()[0], int(url.split()[1]), url.split()[2]) for url in open(OVERFLOW_FILE, 'r')]
                 open(OVERFLOW_FILE, 'w').close()
                 if len(new_urls) > 0:
                     add_bulk_to_work_queue(work_queue, new_urls, visited)
