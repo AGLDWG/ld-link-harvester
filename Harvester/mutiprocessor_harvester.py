@@ -164,11 +164,13 @@ def process_response(response, uri, seed, depth):
         return enhanced_resp
 
 
-start_sentinal = "start"
-end_sentinal = "end"
+start_sentinel = "start"
+end_sentinel = "end"
+
+
 def worker_fn(p, in_queue, out_queue, visited):
     print("Process {} started.".format(p))
-    out_queue.put(start_sentinal)
+    out_queue.put(start_sentinel)
     while not in_queue.empty():
         url = in_queue.get()
         url, depth, seed = url
@@ -191,7 +193,7 @@ def worker_fn(p, in_queue, out_queue, visited):
         else:
             out_queue.put((processed_response, resp))
     print("Process {} done.".format(p))
-    out_queue.put(end_sentinal)
+    out_queue.put(end_sentinel)
     raise SystemExit(0)
 
 
@@ -211,9 +213,7 @@ def add_bulk_to_work_queue(queue, content_list, visited_urls=dict()):
                 queue.put((child[0], child[1], child[2]))
     return queue
 
-#
-#   more annoying pointless stuff
-#
+
 if __name__ == "__main__":
     dbconnector, crawlid = connect()
     print("Adding seeds to database.")
@@ -247,10 +247,10 @@ if __name__ == "__main__":
                 i =- 1
             i += 1
             resp_tuple = resp_queue.get()
-            if resp_tuple == start_sentinal:
+            if resp_tuple == start_sentinel:
                 threads_started += 1
                 continue
-            elif resp_tuple == end_sentinal:
+            elif resp_tuple == end_sentinel:
                 threads_ended += 1
                 if threads_ended == PROC_COUNT:
                     break
