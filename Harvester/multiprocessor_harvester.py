@@ -214,61 +214,74 @@ if __name__ == "__main__":
     visited = manager.dict()
     work_queue = manager.Queue(maxsize=WORK_QUEUE_MAX_SIZE)
     work_queue = add_bulk_to_work_queue(work_queue, URL_BATCH)
-    #[work_queue.put(i) for i in URL_BATCH] # Need to Have a way to pipe into overflow here
     resp_queue = manager.Queue(maxsize=RESP_QUEUE_MAX_SIZE)
-    worker_procs = []
-    for i in range(PROC_COUNT):
-        p = Process(target=worker_fn, args=(i+1, work_queue, resp_queue, visited))
-        worker_procs.append(p)
     begin = time.time()
-    [p.start() for p in worker_procs]
-    #wait for processes to start
-    time.sleep(0.1)
-    threads_started = 0
-    threads_ended = 0
-    i = 0
     while True:
-        print(work_queue.qsize())
-        if i >= COMMIT_FREQ:
-            dbconnector.commit()
-            i =- 1
-        i += 1
-        resp_tuple = resp_queue.get()
-        if resp_tuple == start_sentinal:
-            threads_started += 1
-            continue
-        elif resp_tuple == end_sentinal:
-            threads_ended += 1
-            if threads_ended == PROC_COUNT:
-                break
-            else:
+        worker_procs = []
+        for i in range(PROC_COUNT):
+            p = Process(target=worker_fn, args=(i+1, work_queue, resp_queue, visited))
+            worker_procs.append(p)
+        [p.start() for p in worker_procs]
+        #wait for processes to start
+        time.sleep(0.1)
+        threads_started = 0
+        threads_ended = 0
+        i = 0
+        while True:
+            print(work_queue.qsize())
+            if i >= COMMIT_FREQ:
+                dbconnector.commit()
+                i =- 1
+            i += 1
+            resp_tuple = resp_queue.get()
+            if resp_tuple == start_sentinal:
+                threads_started += 1
                 continue
-        if isinstance(resp_tuple[0], dict):
-            '''
-            OPCODES: 
-            0 = Insert Seed (Deprecated)
-            1 = Insert Failed Seed (Handled by 2)
-            2 = Insert Link (Failed or otherwise)
-            3 = Insert RDF Data
-            '''
-            opcode = resp_tuple[0]['opcode']
-            if resp_tuple[0]['url'] == resp_tuple[0]['params']['source']:
-                dbconnector.insert_crawl_seed(uri=resp_tuple[0]['url'], crawlid=crawlid)
-            if opcode == 2:
-                dbconnector.insert_link(uri=resp_tuple[0]['url'], crawlid=crawlid, source=resp_tuple[0]['params']['source'], content_format=resp_tuple[0]['params']['format'], failed=resp_tuple[0]['params']['failed'])
-                if resp_tuple[0]['params']['failed'] == 1 and resp_tuple[0]['url'] == resp_tuple[0]['params']['source']:
-                    if isinstance(resp_tuple[1], Exception):
-                        dbconnector.insert_failed_seed(uri=resp_tuple[0]['url'], crawlid=crawlid, code='000')
-                    else:
-                        dbconnector.insert_failed_seed(uri=resp_tuple[0]['url'], crawlid=crawlid,  code=resp_tuple[1].status_code)
-            if opcode == 3:
-                dbconnector.insert_valid_rdfuri(uri=resp_tuple[0]['url'], crawlid=crawlid, source=resp_tuple[0]['params']['source'], response_format=resp_tuple[0]['params']['format'])
-        #print(resp_tuple)
-        if isinstance(resp_tuple[1], Exception):
-            print("{} : {}".format(str(resp_tuple[0]['url']), str(resp_tuple[1])))
+            elif resp_tuple == end_sentinal:
+                threads_ended += 1
+                if threads_ended == PROC_COUNT:
+                    break
+                else:
+                    continue
+            if isinstance(resp_tuple[0], dict):
+                '''
+                OPCODES: 
+                0 = Insert Seed (Deprecated)
+                1 = Insert Failed Seed (Handled by 2)
+                2 = Insert Link (Failed or otherwise)
+                3 = Insert RDF Data
+                '''
+                opcode = resp_tuple[0]['opcode']
+                if resp_tuple[0]['url'] == resp_tuple[0]['params']['source']:
+                    dbconnector.insert_crawl_seed(uri=resp_tuple[0]['url'], crawlid=crawlid)
+                if opcode == 2:
+                    dbconnector.insert_link(uri=resp_tuple[0]['url'], crawlid=crawlid, source=resp_tuple[0]['params']['source'], content_format=resp_tuple[0]['params']['format'], failed=resp_tuple[0]['params']['failed'])
+                    if resp_tuple[0]['params']['failed'] == 1 and resp_tuple[0]['url'] == resp_tuple[0]['params']['source']:
+                        if isinstance(resp_tuple[1], Exception):
+                            dbconnector.insert_failed_seed(uri=resp_tuple[0]['url'], crawlid=crawlid, code='000')
+                        else:
+                            dbconnector.insert_failed_seed(uri=resp_tuple[0]['url'], crawlid=crawlid,  code=resp_tuple[1].status_code)
+                if opcode == 3:
+                    dbconnector.insert_valid_rdfuri(uri=resp_tuple[0]['url'], crawlid=crawlid, source=resp_tuple[0]['params']['source'], response_format=resp_tuple[0]['params']['format'])
+            #print(resp_tuple)
+            if isinstance(resp_tuple[1], Exception):
+                print("{} : {}".format(str(resp_tuple[0]['url']), str(resp_tuple[1])))
+            else:
+                print("{} : {}".format(str(resp_tuple[0]['url']), str(resp_tuple[1].status_code)))
+        [p.join() for p in worker_procs]
+        if not AUTO_PROCESS_OVERFLOW:
+            break
         else:
-            print("{} : {}".format(str(resp_tuple[0]['url']), str(resp_tuple[1].status_code)))
-    [p.join() for p in worker_procs]
+            if os.path.isfile(OVERFLOW_FILE):
+                new_urls = [(url.split()[0], url.split()[1], url.split()[2]) for url in open(OVERFLOW_FILE, 'r')]
+                open(OVERFLOW_FILE, 'w').close()
+                if len(new_urls) > 0:
+                    add_bulk_to_work_queue(work_queue, new_urls, visited)
+                    continue
+                else:
+                    break
+            else:
+                break
     end = time.time()
     close()
     print(visited)
