@@ -211,11 +211,7 @@ def add_bulk_to_work_queue(queue, content_list, visited_urls=dict()):
                 queue.put((child[0], child[1], child[2]))
     return queue
 
-#
-#    these are pointless comments
-#
-#   more pointless stuff
-#
+
 if __name__ == "__main__":
     dbconnector, crawlid = connect()
     print("Adding seeds to database.")
