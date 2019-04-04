@@ -212,9 +212,7 @@ def add_bulk_to_work_queue(queue, content_list, visited_urls=dict()):
     return queue
 
 #
-#    these are pointless comments
-#
-#   more pointless stuff
+#   annoying external changes
 #
 if __name__ == "__main__":
     dbconnector, crawlid = connect()
