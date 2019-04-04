@@ -10,6 +10,7 @@ from modules.lddatabase import LDHarvesterDatabaseConnector
 
 URL_BATCH = [(url.strip(), 0, url.strip()) for url in open('single_URI.txt')]
 OVERFLOW_FILE = 'overflow_urls.txt'
+AUTO_PROCESS_OVERFLOW = True
 DATABASE_FILE = 'ld-database.db'
 DATABASE_TEMPLATE = '../database/create_database.sql'
 SCHEMA_INTEGRITY_CHECK = True  # If False and not creating new db, do not need template file. RECOMMEND TO LEAVE True.
@@ -177,19 +178,7 @@ def worker_fn(p, in_queue, out_queue, visited):
             continue
         processed_response = process_response(resp, url, seed, depth)
         if isinstance(processed_response, tuple):
-            full_msg = False
-            for child in processed_response[1]:
-                if in_queue.full():
-                    if not full_msg:
-                        full_msg = True
-                        print("In Queue is Full Flushing URLs to disk")
-                    if child[0] not in visited:
-                        with open(OVERFLOW_FILE, 'a') as overflow:
-                            overflow.write("{} {} {}\n".format(child[0], child[1], child[2]))
-                else:
-                    full_msg = False
-                    if child[0] not in visited:
-                        in_queue.put((child[0], child[1], child[2]))
+            in_queue = add_bulk_to_work_queue(in_queue, processed_response[1], visited)
             out_queue.put((processed_response[0], resp))
         else:
             out_queue.put((processed_response, resp))
@@ -197,15 +186,35 @@ def worker_fn(p, in_queue, out_queue, visited):
     out_queue.put(end_sentinal)
     raise SystemExit(0)
 
+
+def add_bulk_to_work_queue(queue, content_list, visited_urls=dict()):
+    full_msg = False
+    for child in content_list:
+        if queue.full():
+            if not full_msg:
+                print("Work Queue is full. Flushing content to disk.")
+                full_msg = True
+            if child[0] not in visited_urls:
+                with open(OVERFLOW_FILE, 'a') as overflow:
+                    overflow.write("{} {} {}\n".format(child[0], child[1], child[2]))
+        else:
+            full_msg = False
+            if child[0] not in visited_urls:
+                queue.put((child[0], child[1], child[2]))
+    return queue
+
+
 if __name__ == "__main__":
     dbconnector, crawlid = connect()
     signal.signal(signal.SIGTERM, close)
     signal.signal(signal.SIGINT, close)
 
+    full_msg = False
     manager = Manager()
     visited = manager.dict()
     work_queue = manager.Queue(maxsize=WORK_QUEUE_MAX_SIZE)
-    [work_queue.put(i) for i in URL_BATCH]
+    work_queue = add_bulk_to_work_queue(work_queue, URL_BATCH)
+    #[work_queue.put(i) for i in URL_BATCH] # Need to Have a way to pipe into overflow here
     resp_queue = manager.Queue(maxsize=RESP_QUEUE_MAX_SIZE)
     worker_procs = []
     for i in range(PROC_COUNT):
