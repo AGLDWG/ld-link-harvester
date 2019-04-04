@@ -156,15 +156,14 @@ start_sentinal = "start"
 end_sentinal = "end"
 def worker_fn(p, in_queue, out_queue, visited):
     print("Process {} started.".format(p))
-    signal.signal(signal.SIGTERM, close)
-    signal.signal(signal.SIGINT, close)
+    time.sleep(2)
     out_queue.put(start_sentinal)
     while not in_queue.empty():
         url = in_queue.get()
         url, depth, seed = url
         try:
             if url not in visited and depth <= RECURSION_DEPTH_LIMIT:
-                visited[url.strip('/#')] = True
+                visited[url] = True
                 resp = requests.get(url, headers=GLOBAL_HEADER)
             else:
                 continue
@@ -206,6 +205,7 @@ if __name__ == "__main__":
     threads_ended = 0
     i = 0
     while True:
+        print(work_queue.qsize())
         if i >= COMMIT_FREQ:
             dbconnector.commit()
             i =- 1
