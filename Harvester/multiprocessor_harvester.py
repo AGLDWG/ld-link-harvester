@@ -1,4 +1,5 @@
 import requests
+import pickle
 from multiprocessing import Queue, Process, Manager
 import time
 import signal
@@ -9,7 +10,7 @@ from urllib.parse import urljoin, urlparse
 from modules.lddatabase import LDHarvesterDatabaseConnector
 
 URL_BATCH = [(url.strip(), 0, url.strip()) for url in open('single_URI.txt')]
-OVERFLOW_FILE = 'overflow_urls.txt'
+WORK_QUEUE_OVERFLOW_FILE = 'overflow_urls.txt'
 AUTO_PROCESS_OVERFLOW = True
 DATABASE_FILE = 'ld-database.db'
 DATABASE_TEMPLATE = '../database/create_database.sql'
@@ -17,8 +18,8 @@ SCHEMA_INTEGRITY_CHECK = True  # If False and not creating new db, do not need t
 RECURSION_DEPTH_LIMIT = 4
 PROC_COUNT = 8
 COMMIT_FREQ = 50
-WORK_QUEUE_MAX_SIZE = 40
-RESP_QUEUE_MAX_SIZE = 20000
+WORK_QUEUE_MAX_SIZE = 10000
+RESP_QUEUE_MAX_SIZE = 10000
 RDF_MEDIA_TYPES = [
     "application/rdf+xml",
     "text/turtle",
@@ -111,7 +112,14 @@ def find_links_html(response_content, uri, seed, depth=0):
 
 
 def process_response(response, uri, seed, depth):
-    file_format = response.headers['Content-type'].split(';')[0]
+    try:
+        file_format = response.headers['Content-type'].split(';')[0]
+    except:
+        print('Bad response from {}. Continuing'.format(uri))
+        enhanced_resp = {'url': uri,
+                         'opcode': 2,
+                         'params': {'source': seed, 'format': "N/A", 'failed': 1}}
+        return enhanced_resp
     if response.status_code == 200:
         if uri.split('.')[-1] in RDF_FORMATS:
             enhanced_resp = {'url': uri,
@@ -195,7 +203,7 @@ def add_bulk_to_work_queue(queue, content_list, visited_urls=dict()):
                 print("Work Queue is full. Flushing content to disk.")
                 full_msg = True
             if child[0] not in visited_urls:
-                with open(OVERFLOW_FILE, 'a') as overflow:
+                with open(WORK_QUEUE_OVERFLOW_FILE, 'a') as overflow:
                     overflow.write("{} {} {}\n".format(child[0], child[1], child[2]))
         else:
             full_msg = False
@@ -228,7 +236,7 @@ if __name__ == "__main__":
         threads_ended = 0
         i = 0
         while True:
-            print(work_queue.qsize())
+            print(resp_queue.qsize())
             if i >= COMMIT_FREQ:
                 dbconnector.commit()
                 i =- 1
@@ -272,9 +280,9 @@ if __name__ == "__main__":
         if not AUTO_PROCESS_OVERFLOW:
             break
         else:
-            if os.path.isfile(OVERFLOW_FILE):
-                new_urls = [(url.split()[0], int(url.split()[1]), url.split()[2]) for url in open(OVERFLOW_FILE, 'r')]
-                open(OVERFLOW_FILE, 'w').close()
+            if os.path.isfile(WORK_QUEUE_OVERFLOW_FILE):
+                new_urls = [(url.split()[0], int(url.split()[1]), url.split()[2]) for url in open(WORK_QUEUE_OVERFLOW_FILE, 'r')]
+                open(WORK_QUEUE_OVERFLOW_FILE, 'w').close()
                 if len(new_urls) > 0:
                     add_bulk_to_work_queue(work_queue, new_urls, visited)
                     continue
@@ -284,5 +292,5 @@ if __name__ == "__main__":
                 break
     end = time.time()
     close()
-    print(visited)
+    #print(visited)
     print("Duration: {} seconds".format(end - begin))
