@@ -9,12 +9,15 @@ from urllib.parse import urljoin, urlparse
 from modules.lddatabase import LDHarvesterDatabaseConnector
 
 URL_BATCH = [(url.strip(), 0, url.strip()) for url in open('single_URI.txt')]
+OVERFLOW_FILE = 'overflow_urls.txt'
 DATABASE_FILE = 'ld-database.db'
 DATABASE_TEMPLATE = '../database/create_database.sql'
 SCHEMA_INTEGRITY_CHECK = True  # If False and not creating new db, do not need template file. RECOMMEND TO LEAVE True.
 RECURSION_DEPTH_LIMIT = 4
 PROC_COUNT = 8
 COMMIT_FREQ = 50
+WORK_QUEUE_MAX_SIZE = 40
+RESP_QUEUE_MAX_SIZE = 20000
 RDF_MEDIA_TYPES = [
     "application/rdf+xml",
     "text/turtle",
@@ -156,7 +159,6 @@ start_sentinal = "start"
 end_sentinal = "end"
 def worker_fn(p, in_queue, out_queue, visited):
     print("Process {} started.".format(p))
-    time.sleep(2)
     out_queue.put(start_sentinal)
     while not in_queue.empty():
         url = in_queue.get()
@@ -175,7 +177,19 @@ def worker_fn(p, in_queue, out_queue, visited):
             continue
         processed_response = process_response(resp, url, seed, depth)
         if isinstance(processed_response, tuple):
-            [in_queue.put((child[0], child[1], child[2])) for child in processed_response[1]]
+            full_msg = False
+            for child in processed_response[1]:
+                if in_queue.full():
+                    if not full_msg:
+                        full_msg = True
+                        print("In Queue is Full Flushing URLs to disk")
+                    if child[0] not in visited:
+                        with open(OVERFLOW_FILE, 'a') as overflow:
+                            overflow.write("{} {} {}\n".format(child[0], child[1], child[2]))
+                else:
+                    full_msg = False
+                    if child[0] not in visited:
+                        in_queue.put((child[0], child[1], child[2]))
             out_queue.put((processed_response[0], resp))
         else:
             out_queue.put((processed_response, resp))
@@ -190,9 +204,9 @@ if __name__ == "__main__":
 
     manager = Manager()
     visited = manager.dict()
-    work_queue = manager.Queue()
+    work_queue = manager.Queue(maxsize=WORK_QUEUE_MAX_SIZE)
     [work_queue.put(i) for i in URL_BATCH]
-    resp_queue = manager.Queue()
+    resp_queue = manager.Queue(maxsize=RESP_QUEUE_MAX_SIZE)
     worker_procs = []
     for i in range(PROC_COUNT):
         p = Process(target=worker_fn, args=(i+1, work_queue, resp_queue, visited))
