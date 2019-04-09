@@ -18,7 +18,7 @@ SCHEMA_INTEGRITY_CHECK = True  # If False and not creating new db, do not need t
 RECURSION_DEPTH_LIMIT = 4
 PROC_COUNT = 8
 COMMIT_FREQ = 50
-WORK_QUEUE_MAX_SIZE = 3
+WORK_QUEUE_MAX_SIZE = 10000
 RESP_QUEUE_MAX_SIZE = 10000
 RDF_MEDIA_TYPES = [
     "application/rdf+xml",
