@@ -109,6 +109,7 @@ venv.bak/
 
 # SQLite DBs
 *.db
+*.db-journal
 
 # Backup files
 *.bak

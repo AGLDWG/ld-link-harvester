@@ -7,7 +7,7 @@ import sqlite3
 import os
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
-from .lddatabase import LDHarvesterDatabaseConnector
+from lddatabase import LDHarvesterDatabaseConnector
 
 URL_BATCH = [(url.strip(), 0, url.strip()) for url in open('single_URI.txt')]
 WORK_QUEUE_OVERFLOW_FILE = 'overflow_urls.txt'
@@ -18,7 +18,7 @@ SCHEMA_INTEGRITY_CHECK = True  # If False and not creating new db, do not need t
 RECURSION_DEPTH_LIMIT = 4
 PROC_COUNT = 8
 COMMIT_FREQ = 50
-WORK_QUEUE_MAX_SIZE = 10000
+WORK_QUEUE_MAX_SIZE = 3
 RESP_QUEUE_MAX_SIZE = 10000
 RDF_MEDIA_TYPES = [
     "application/rdf+xml",
@@ -241,7 +241,7 @@ if __name__ == "__main__":
         threads_ended = 0
         i = 0
         while True:
-            print(resp_queue.qsize())
+            #print(resp_queue.qsize())
             if i >= COMMIT_FREQ:
                 dbconnector.commit()
                 i =- 1
@@ -283,12 +283,12 @@ if __name__ == "__main__":
                 print("{} : {}".format(str(resp_tuple[0]['url']), str(resp_tuple[1])))
             else:
                 print("{} : {}".format(str(resp_tuple[0]['url']), str(resp_tuple[1].status_code)))
-        [p.join() for p in worker_procs]
+            [p.join() for p in worker_procs]
         if not AUTO_PROCESS_OVERFLOW:
             break
         else:
             if os.path.isfile(WORK_QUEUE_OVERFLOW_FILE):
-                new_urls = [(url.split()[0], int(url.split()[1]), url.split()[2]) for url in open(WORK_QUEUE_OVERFLOW_FILE, 'r')]
+                new_urls = [(url.split()[0], int(url.split()[1]), url.split()[2]) if len(url.split()) == 3 else print("Fuck") for url in open(WORK_QUEUE_OVERFLOW_FILE, 'r')]
                 open(WORK_QUEUE_OVERFLOW_FILE, 'w').close()
                 if len(new_urls) > 0:
                     add_bulk_to_work_queue(work_queue, new_urls, visited)

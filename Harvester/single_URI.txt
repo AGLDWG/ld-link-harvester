@@ -1,5 +1,1 @@
-http://reference.data.gov.au/def/ont/dataset
-http://catalogue.linked.data.gov.au
-http://metadata-standards.org/11179/
-http://linked.data.gov.au/
-http://test.linked.data.gov.au/def/gsq-method-type#Pyrolysis_Analysis
+http://127.0.0.1:8080
