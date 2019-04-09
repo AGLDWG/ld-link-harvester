@@ -9,7 +9,7 @@ from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
 from lddatabase import LDHarvesterDatabaseConnector
 
-URL_BATCH = [(url.strip(), 0, url.strip()) for url in open('single_URI.txt')]
+URL_SOURCE = 'single_URI.txt'
 WORK_QUEUE_OVERFLOW_FILE = 'overflow_urls.txt'
 AUTO_PROCESS_OVERFLOW = True
 DATABASE_FILE = 'ld-database.db'
@@ -60,10 +60,11 @@ BLACKLIST_FORMATS = [
     'svg',
     'SVG'
 ]
-def verify_database(connector):
+
+def verify_database(connector, template):
     virtual_db = sqlite3.Connection(':memory:')
     virtual_cursor = virtual_db.cursor()
-    with open(DATABASE_TEMPLATE, 'r') as script:
+    with open(template, 'r') as script:
         virtual_cursor.executescript(script.read())
     if virtual_cursor.execute("SELECT sql FROM sqlite_master WHERE type='table'").fetchall() == connector.cursor.execute("SELECT sql FROM sqlite_master WHERE type='table'").fetchall():
         return True
@@ -79,12 +80,6 @@ def connect():
             print("Successfully connected to '{}'.".format(DATABASE_FILE))
             crawlid = dbconnector.get_new_crawlid()
             dbconnector.insert_crawl(crawlid)
-            if SCHEMA_INTEGRITY_CHECK:
-                if verify_database(dbconnector):
-                    print("Database schema integrity has been verified.")
-                else:
-                    print("Error, database schema does not match the provided template.")
-                    exit(1)
             return dbconnector, crawlid
         else:
             print("Cannot find '{}'.".format(DATABASE_FILE))
@@ -114,13 +109,8 @@ def close():
 
 
 def find_links_html(response_content, uri, seed, depth=0):
-    #filter out crap links
     links = []
     soup = BeautifulSoup(response_content, "lxml")
-    all = soup.findAll()
-    ids = []
-    for item in all:
-        ids.append(item.get('id'))
     for link in soup.findAll('a'):
         link = link.get('href')
         link = urljoin(uri, link)
@@ -240,7 +230,14 @@ def add_bulk_to_work_queue(queue, content_list, visited_urls=dict()):
 
 
 if __name__ == "__main__":
+    URL_BATCH = [(url.strip(), 0, url.strip()) for url in open(URL_SOURCE)]
     dbconnector, crawlid = connect()
+    if SCHEMA_INTEGRITY_CHECK:
+        if verify_database(dbconnector, DATABASE_TEMPLATE):
+            print("Database schema integrity has been verified.")
+        else:
+            print("Error, database schema does not match the provided template.")
+            exit(1)
     print("Adding seeds to database.")
     dbconnector.insert_seed_bulk(URL_BATCH)
     dbconnector.commit()
