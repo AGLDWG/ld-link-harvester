@@ -41,8 +41,25 @@ GLOBAL_HEADER = {
     'Accept': ",".join(RDF_MEDIA_TYPES),
     'User-Agent': 'LD Link Harvester'
 }
-
-
+BLACKLIST_FORMATS = [
+    'jpg',
+    'JPG',
+    'BMP',
+    'bmp',
+    'png',
+    'PNG',
+    'jpeg',
+    'JPEG',
+    'MP4',
+    'mp4',
+    'flv',
+    'pdf',
+    'PDF',
+    'eps',
+    'EPS',
+    'svg',
+    'SVG'
+]
 def verify_database(connector):
     virtual_db = sqlite3.Connection(':memory:')
     virtual_cursor = virtual_db.cursor()
@@ -97,6 +114,7 @@ def close():
 
 
 def find_links_html(response_content, uri, seed, depth=0):
+    #filter out crap links
     links = []
     soup = BeautifulSoup(response_content, "lxml")
     all = soup.findAll()
@@ -106,6 +124,9 @@ def find_links_html(response_content, uri, seed, depth=0):
     for link in soup.findAll('a'):
         link = link.get('href')
         link = urljoin(uri, link)
+        link = link.split('#')[0]
+        if urlparse(link).path.split('/')[-1].split('.')[-1] in BLACKLIST_FORMATS:
+            continue
         if isinstance(link, str):
             links.append((link, depth, seed))
     return links
@@ -133,8 +154,12 @@ def process_response(response, uri, seed, depth):
             return enhanced_resp
         elif file_format == 'text/html':
             try:
-                #DO NOT FORGET TO MAKE THIS HANDLE REDIRECTS
                 if urlparse(uri).netloc == urlparse(seed).netloc:
+                    if depth == 0 and len(response.history) > 0 and response.history[0].status_code in [300, 301, 302, 303, 304, 305, 307, 308]:
+                        try:
+                            seed = response.history[0].headers['Location']
+                        except Exception as er:
+                            print("Could not find redirect location in headers for {}: {}".format(uri, er))
                     child_links = find_links_html(response.content, uri, seed, depth+1)
                     enhanced_resp = {'url': uri,
                                     'opcode': 2,
