@@ -15,11 +15,11 @@ AUTO_PROCESS_OVERFLOW = True
 DATABASE_FILE = 'ld-database.db'
 DATABASE_TEMPLATE = '../database/create_database.sql'
 SCHEMA_INTEGRITY_CHECK = True  # If False and not creating new db, do not need template file. RECOMMEND TO LEAVE True.
-RECURSION_DEPTH_LIMIT = 4
+RECURSION_DEPTH_LIMIT = 3
 PROC_COUNT = 8
 COMMIT_FREQ = 50
-WORK_QUEUE_MAX_SIZE = 10000
-RESP_QUEUE_MAX_SIZE = 10000
+WORK_QUEUE_MAX_SIZE = 1000000
+RESP_QUEUE_MAX_SIZE = 1000000
 RDF_MEDIA_TYPES = [
     "application/rdf+xml",
     "text/turtle",
@@ -303,17 +303,16 @@ if __name__ == "__main__":
                 if opcode == 3:
                     dbconnector.insert_link(uri=resp_tuple[0]['url'], crawlid=crawlid, source=resp_tuple[0]['params']['source'],content_format=resp_tuple[0]['params']['format'], failed=0)
                     dbconnector.insert_valid_rdfuri(uri=resp_tuple[0]['url'], crawlid=crawlid, source=resp_tuple[0]['params']['source'], response_format=resp_tuple[0]['params']['format'])
-
             if isinstance(resp_tuple[1], Exception):
                 print("{} : {}".format(str(resp_tuple[0]['url']), str(resp_tuple[1])))
             else:
                 print("{} : {}".format(str(resp_tuple[0]['url']), str(resp_tuple[1].status_code)))
-            [p.join() for p in worker_procs]
+        [p.join() for p in worker_procs]
         if not AUTO_PROCESS_OVERFLOW:
             break
         else:
             if os.path.isfile(WORK_QUEUE_OVERFLOW_FILE):
-                new_urls = [(url.split()[0], int(url.split()[1]), url.split()[2]) if len(url.split()) == 3 else print("Fuck") for url in open(WORK_QUEUE_OVERFLOW_FILE, 'r')]
+                new_urls = [(url.split()[0], int(url.split()[1]), url.split()[2]) for url in open(WORK_QUEUE_OVERFLOW_FILE, 'r')]
                 open(WORK_QUEUE_OVERFLOW_FILE, 'w').close()
                 if len(new_urls) > 0:
                     add_bulk_to_work_queue(work_queue, new_urls, visited)
