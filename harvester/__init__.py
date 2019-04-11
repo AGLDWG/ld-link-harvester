@@ -7,7 +7,7 @@ import sqlite3
 import os
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
-from lddatabase import LDHarvesterDatabaseConnector
+from harvester.lddatabase import LDHarvesterDatabaseConnector
 
 URL_SOURCE = 'single_URI.txt'
 WORK_QUEUE_OVERFLOW_FILE = 'overflow_urls.txt'
@@ -147,7 +147,8 @@ def process_response(response, uri, seed, depth):
                 if urlparse(uri).netloc == urlparse(seed).netloc:
                     if depth == 0 and len(response.history) > 0 and response.history[0].status_code in [300, 301, 302, 303, 304, 305, 307, 308]:
                         try:
-                            seed = response.history[0].headers['Location']
+                            seed = "http://" + urlparse(response.history[0].headers['Location']).netloc
+                            uri = response.history[0].headers['Location']
                         except Exception as er:
                             print("Could not find redirect location in headers for {}: {}".format(uri, er))
                     child_links = find_links_html(response.content, uri, seed, depth+1)
