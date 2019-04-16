@@ -1,6 +1,7 @@
 import harvester
 from multiprocessing import Queue, Process, Manager
 
+#Set appropriate global variables
 WORK_QUEUE_MAX_SIZE = 100
 RESP_QUEUE_MAX_SIZE = 100
 URL_BATCH = [("http://127.0.0.1:8080", 0, "http://127.0.0.1:8080")]

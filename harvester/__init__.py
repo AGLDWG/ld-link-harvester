@@ -10,6 +10,7 @@ from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
 from harvester.lddatabase import LDHarvesterDatabaseConnector
 
+# Set Global Variables
 URL_SOURCE = 'single_URI.txt'
 if len(sys.argv) > 1:
     URL_SOURCE = sys.argv[1]
@@ -65,6 +66,12 @@ BLACKLIST_FORMATS = [
 ]
 
 def verify_database(connector, template):
+    """
+    Verifies the schema of the database attached to a connector against an external SQL script (template).
+    :param connector: lddatabase.LDHarvesterDatabaseConnector
+    :param template:  str
+    :return: bool
+    """
     virtual_db = sqlite3.Connection(':memory:')
     virtual_cursor = virtual_db.cursor()
     with open(template, 'r') as script:
@@ -76,6 +83,10 @@ def verify_database(connector, template):
 
 
 def connect():
+    """
+    Connect to the database as necessary using the custom database connector (uses the GLOBAL database file).
+    :return: tuple
+    """
     print('Opening connector to database...')
     try:
         if os.path.isfile(DATABASE_FILE):
@@ -105,6 +116,10 @@ def connect():
 
 
 def close():
+    """
+    End the crawl, commit database changes and close the database connection.
+    :return: None
+    """
     dbconnector.end_crawl(crawlid)
     dbconnector.commit()
     dbconnector.close()
@@ -112,6 +127,14 @@ def close():
 
 
 def find_links_html(response_content, uri, seed, depth=0):
+    """
+    Take web response content, create a beautifulsoup map of it and find appropriate links to visit.
+    :param response_content: str
+    :param uri: str
+    :param seed: str
+    :param depth: int
+    :return: list
+    """
     links = []
     soup = BeautifulSoup(response_content, "lxml")
     for link in soup.findAll('a'):
@@ -126,6 +149,14 @@ def find_links_html(response_content, uri, seed, depth=0):
 
 
 def process_response(response, uri, seed, depth):
+    """
+    Process a response appropriately and generate an 'enhanced response' containing metadata about the response and approptiate actions to do with it.
+    :param response: requests.Response()
+    :param uri: str
+    :param seed: str
+    :param depth: int
+    :return: tuple or dict
+    """
     try:
         file_format = response.headers['Content-type'].split(';')[0]
     except:
@@ -188,6 +219,14 @@ end_sentinel = "end"
 
 
 def worker_fn(p, in_queue, out_queue, visited):
+    """
+    Individual worker function which takes items from the work queue, sends a request and adds the processed response to the response queue.
+    :param p: str
+    :param in_queue: multiprocessing.Queue
+    :param out_queue: multiprocessing.Queue
+    :param visited: dict
+    :return: None
+    """
     print("Process {} started.".format(p))
     out_queue.put(start_sentinel)
     while not in_queue.empty():
@@ -217,6 +256,13 @@ def worker_fn(p, in_queue, out_queue, visited):
 
 
 def add_bulk_to_work_queue(queue, content_list, visited_urls=dict()):
+    """
+    Add a bulk load of URIs to a queue at once.
+    :param queue: multiprocessing.Queue()
+    :param content_list: list
+    :param visited_urls: dict
+    :return: multiprocessing.Queue()
+    """
     full_msg = False
     for child in content_list:
         if queue.full():
@@ -234,6 +280,9 @@ def add_bulk_to_work_queue(queue, content_list, visited_urls=dict()):
 
 
 if __name__ == "__main__":
+    """
+    Main runtime script. Essentially calls on the functions as appropriate. Handles workers, and processes contents of the response queue.
+    """
     URL_BATCH = [(url.strip(), 0, url.strip()) for url in open(URL_SOURCE)]
     dbconnector, crawlid = connect()
     if SCHEMA_INTEGRITY_CHECK:
@@ -324,5 +373,4 @@ if __name__ == "__main__":
                 break
     end = time.time()
     close()
-    # print(visited)
     print("Duration: {} seconds".format(end - begin))
