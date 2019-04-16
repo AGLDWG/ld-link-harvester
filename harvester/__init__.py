@@ -5,11 +5,14 @@ import time
 import signal
 import sqlite3
 import os
+import sys
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
 from harvester.lddatabase import LDHarvesterDatabaseConnector
 
 URL_SOURCE = 'single_URI.txt'
+if len(sys.argv) > 1:
+    URL_SOURCE = sys.argv[1]
 WORK_QUEUE_OVERFLOW_FILE = 'overflow_urls.txt'
 AUTO_PROCESS_OVERFLOW = True
 DATABASE_FILE = 'ld-database.db'
