@@ -88,3 +88,18 @@ GROUP BY Link.crawlId;
 SELECT crawlId, contentFormat, COUNT(contentFormat)
 FROM Link
 GROUP BY crawlId, contentFormat;
+
+-- List the number of links visited per crawl (ignoring simple domains that only have one link i.e. themselves)
+SELECT originSeedURI, COUNT(DISTINCT address)
+FROM Link
+GROUP BY originSeedURI
+HAVING COUNT(DISTINCT address) > 1;
+
+-- Generate the count of each size of each link visited (histogram data)
+SELECT size, COUNT(size)
+FROM (
+    SELECT originSeedURI, COUNT(DISTINCT address) as size
+    FROM Link
+    GROUP BY originSeedURI
+    HAVING COUNT(DISTINCT address) > 1)
+GROUP BY size;
