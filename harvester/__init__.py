@@ -82,27 +82,28 @@ def verify_database(connector, template):
         return False
 
 
-def connect():
+def connect(database_file):
     """
-    Connect to the database as necessary using the custom database connector (uses the GLOBAL database file).
+    Connect to the database as necessary using the custom database connector (uses the database file name provided).
+    :param database_file: str
     :return: tuple
     """
     print('Opening connector to database...')
     try:
-        if os.path.isfile(DATABASE_FILE):
-            dbconnector = LDHarvesterDatabaseConnector(DATABASE_FILE)
-            print("Successfully connected to '{}'.".format(DATABASE_FILE))
+        if os.path.isfile(database_file):
+            dbconnector = LDHarvesterDatabaseConnector(database_file)
+            print("Successfully connected to '{}'.".format(database_file))
             crawlid = dbconnector.get_new_crawlid()
             dbconnector.insert_crawl(crawlid)
             return dbconnector, crawlid
         else:
-            print("Cannot find '{}'.".format(DATABASE_FILE))
-            ans = str(input("Would you like to create '{}' now? [y/n] ".format(DATABASE_FILE)))
+            print("Cannot find '{}'.".format(database_file))
+            ans = str(input("Would you like to create '{}' now? [y/n] ".format(database_file)))
             if ans.lower() == 'y':
-                dbconnector = LDHarvesterDatabaseConnector(DATABASE_FILE)
+                dbconnector = LDHarvesterDatabaseConnector(database_file)
                 with open(DATABASE_TEMPLATE, 'r') as script:
                     dbconnector.cursor.executescript(script.read())
-                print("Successfully created '{}'.".format(DATABASE_FILE))
+                print("Successfully created '{}'.".format(database_file))
                 crawlid = dbconnector.get_new_crawlid()
                 dbconnector.insert_crawl(crawlid)
                 return dbconnector, crawlid
@@ -284,7 +285,7 @@ if __name__ == "__main__":
     Main runtime script. Essentially calls on the functions as appropriate. Handles workers, and processes contents of the response queue.
     """
     URL_BATCH = [(url.strip(), 0, url.strip()) for url in open(URL_SOURCE)]
-    dbconnector, crawlid = connect()
+    dbconnector, crawlid = connect(DATABASE_FILE)
     if SCHEMA_INTEGRITY_CHECK:
         if verify_database(dbconnector, DATABASE_TEMPLATE):
             print("Database schema integrity has been verified.")
