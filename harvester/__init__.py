@@ -82,10 +82,11 @@ def verify_database(connector, template):
         return False
 
 
-def connect(database_file):
+def connect(database_file, crawl=True):
     """
-    Connect to the database as necessary using the custom database connector (uses the database file name provided).
+    Connect to the database as necessary using the custom database connector (uses the database file name provided). A new crawl is also created if specified.
     :param database_file: str
+    :param crawl: bool = True
     :return: tuple
     """
     print('Opening connector to database...')
@@ -93,9 +94,12 @@ def connect(database_file):
         if os.path.isfile(database_file):
             dbconnector = LDHarvesterDatabaseConnector(database_file)
             print("Successfully connected to '{}'.".format(database_file))
-            crawlid = dbconnector.get_new_crawlid()
-            dbconnector.insert_crawl(crawlid)
-            return dbconnector, crawlid
+            if crawl:
+                crawlid = dbconnector.get_new_crawlid()
+                dbconnector.insert_crawl(crawlid)
+                return dbconnector, crawlid
+            else:
+                return dbconnector, None
         else:
             print("Cannot find '{}'.".format(database_file))
             ans = str(input("Would you like to create '{}' now? [y/n] ".format(database_file)))
@@ -104,9 +108,12 @@ def connect(database_file):
                 with open(DATABASE_TEMPLATE, 'r') as script:
                     dbconnector.cursor.executescript(script.read())
                 print("Successfully created '{}'.".format(database_file))
-                crawlid = dbconnector.get_new_crawlid()
-                dbconnector.insert_crawl(crawlid)
-                return dbconnector, crawlid
+                if crawl:
+                    crawlid = dbconnector.get_new_crawlid()
+                    dbconnector.insert_crawl(crawlid)
+                    return dbconnector, crawlid
+                else:
+                    return dbconnector, 0
             else:
                 print('Exiting')
                 exit(0)
