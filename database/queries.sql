@@ -103,3 +103,26 @@ FROM (
     GROUP BY originSeedURI
     HAVING COUNT(DISTINCT address) > 1)
 GROUP BY size;
+
+-- Repair missing end dates in Crawl as latest dateVisited in the Link Table for that crawl
+SELECT crawlId, MAX(dateVisited) as LatestVisit, MIN(dateVisited) as EarliestVisit
+FROM Link
+WHERE crawlId in (
+    SELECT crawlId
+    FROM Crawl
+    WHERE endDate is Null)
+GROUP BY crawlId;
+
+;WITH PseudoEnds as
+(
+    SELECT crawlId, MAX(dateVisited) as LatestVisit
+    FROM Link
+    GROUP BY crawlId
+)
+UPDATE Crawl
+SET endDate = (
+    SELECT LatestVisit
+    FROM PseudoEnds
+    WHERE Crawl.crawlId = PseudoEnds.crawlId)
+WHERE endDate is null
+    AND PseudoEnds.crawlId = Crawl.crawlId;

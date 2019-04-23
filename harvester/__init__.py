@@ -19,6 +19,7 @@ AUTO_PROCESS_OVERFLOW = True
 DATABASE_FILE = 'ld-database.db'
 DATABASE_TEMPLATE = '../database/create_database.sql'
 SCHEMA_INTEGRITY_CHECK = True  # If False and not creating new db, do not need template file. RECOMMEND TO LEAVE True.
+CRAWL_RECORD_REPAIR = True
 RECURSION_DEPTH_LIMIT = 3
 PROC_COUNT = 8
 COMMIT_FREQ = 50
@@ -299,6 +300,12 @@ if __name__ == "__main__":
         else:
             print("Error, database schema does not match the provided template.")
             exit(1)
+    if CRAWL_RECORD_REPAIR:
+        repairs_required, repairs_made = dbconnector.self_repair_crawl_periods()
+        if repairs_required != 0:
+            print("Repairing Crawl records.\nRepairs Required: {}\nRepairs Made: {}".format(repairs_required, repairs_made))
+        else:
+            print("No Crawl record repairs are required.")
     print("Adding seeds to database.")
     dbconnector.insert_seed_bulk(URL_BATCH)
     dbconnector.commit()

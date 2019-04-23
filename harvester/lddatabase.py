@@ -10,6 +10,38 @@ class LDHarvesterDatabaseConnector(sqlite3.Connection):
         super().__init__(file)
         self.cursor = sqlite3.Cursor(self)
 
+    def self_repair_crawl_periods(self):
+        """
+        Searches the database crawl table to look for records of crawls that do not have end dates (due to erranous program exits) and fills them in as the latest time that a link has been visited.
+        :return: tuple (repairs_required, repairs_made)
+        """
+        pseudo_values = self.cursor.execute("""
+            SELECT crawlId, MAX(dateVisited) as LatestVisit
+            FROM Link
+            WHERE crawlId in (
+                SELECT crawlId
+                FROM Crawl
+                WHERE endDate is Null)
+            GROUP BY crawlId;
+        """).fetchall()
+        repairs_required = len(pseudo_values)
+        if repairs_required == 0:
+            return 0, 0
+        else:
+            repairs_made = 0
+            for crawl, pseudo_ending in pseudo_values:
+                try:
+                    self.cursor.execute("""
+                        UPDATE Crawl
+                        SET endDate = {pseudo_ending}
+                        WHERE crawlId = {crawl}                
+                    """.format(pseudo_ending=pseudo_ending, crawl=crawl))
+                    repairs_made += 1
+                except Exception as er:
+                    print("Cannot repair record for crawl '{}'...{}".format(crawl, er))
+            self.commit()
+            return repairs_required, repairs_made
+
     def get_new_crawlid(self):
         """
         Generate the next logical crawlId for the run.
