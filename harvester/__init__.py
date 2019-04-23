@@ -21,7 +21,7 @@ DATABASE_TEMPLATE = '../database/create_database.sql'
 SCHEMA_INTEGRITY_CHECK = True  # If False and not creating new db, do not need template file. RECOMMEND TO LEAVE True.
 CRAWL_RECORD_REPAIR = True
 RECURSION_DEPTH_LIMIT = 3
-PROC_COUNT = 8
+PROC_COUNT = 1
 COMMIT_FREQ = 50
 WORK_QUEUE_MAX_SIZE = 1000000
 RESP_QUEUE_MAX_SIZE = 1000000
@@ -238,33 +238,35 @@ def worker_fn(p, in_queue, out_queue, visited):
     """
     print("Process {} started.".format(p))
     out_queue.put(start_sentinel)
-    while not in_queue.empty():
-        url = in_queue.get()
-        url, depth, seed = url
-        try:
-            if url not in visited and depth <= RECURSION_DEPTH_LIMIT:
-                visited[url] = True
-                resp = requests.get(url, headers=GLOBAL_HEADER)
-            else:
+    inactivity_counter = 0
+    while True:
+        while not in_queue.empty():
+            inactivity_counter = 0
+            url = in_queue.get()
+            url, depth, seed = url
+            try:
+                if depth <= RECURSION_DEPTH_LIMIT:
+                    resp = requests.get(url, headers=GLOBAL_HEADER)
+                else:
+                    continue
+            except Exception as e:
+                enhanced_resp = {'url': url,
+                                 'opcode': 2,
+                                 'params': {'source': seed, 'format': "N/A", 'failed': 1}}
+                out_queue.put((enhanced_resp, e))
                 continue
-        except Exception as e:
-            enhanced_resp = {'url': url,
-                             'opcode': 2,
-                             'params': {'source': seed, 'format': "N/A", 'failed': 1}}
-            out_queue.put((enhanced_resp, e))
-            continue
-        processed_response = process_response(resp, url, seed, depth)
-        if isinstance(processed_response, tuple):
-            in_queue = add_bulk_to_work_queue(in_queue, processed_response[1], visited)
-            out_queue.put((processed_response[0], resp))
-        else:
+            processed_response = process_response(resp, url, seed, depth)
             out_queue.put((processed_response, resp))
+        inactivity_counter += 1
+        time.sleep(2) # Waiting for control process to add more URIs
+        if inactivity_counter > 3:
+            break
     print("Process {} done.".format(p))
     out_queue.put(end_sentinel)
     raise SystemExit(0)
 
 
-def add_bulk_to_work_queue(queue, content_list, visited_urls=dict()):
+def add_bulk_to_work_queue(queue, content_list, visited_urls):
     """
     Add a bulk load of URIs to a queue at once.
     :param queue: multiprocessing.Queue()
@@ -274,7 +276,7 @@ def add_bulk_to_work_queue(queue, content_list, visited_urls=dict()):
     """
     full_msg = False
     for child in content_list:
-        if queue.full():
+        if work_queue.full():
             if not full_msg:
                 print("Work Queue is full. Flushing content to disk.")
                 full_msg = True
@@ -284,8 +286,10 @@ def add_bulk_to_work_queue(queue, content_list, visited_urls=dict()):
         else:
             full_msg = False
             if child[0] not in visited_urls:
-                queue.put((child[0], child[1], child[2]))
-    return queue
+                work_queue.put((child[0], child[1], child[2]))
+            #else:
+            #    print("BARRED")
+    return
 
 
 if __name__ == "__main__":
@@ -314,9 +318,9 @@ if __name__ == "__main__":
     signal.signal(signal.SIGINT, close)
     full_msg = False
     manager = Manager()
-    visited = manager.dict()
+    visited = dict()
     work_queue = manager.Queue(maxsize=WORK_QUEUE_MAX_SIZE)
-    work_queue = add_bulk_to_work_queue(work_queue, URL_BATCH)
+    add_bulk_to_work_queue(work_queue, URL_BATCH, visited)
     resp_queue = manager.Queue(maxsize=RESP_QUEUE_MAX_SIZE)
     begin = time.time()
     while True:
@@ -326,12 +330,12 @@ if __name__ == "__main__":
             worker_procs.append(p)
         [p.start() for p in worker_procs]
         # wait for processes to start
-        time.sleep(0.1)
+        time.sleep(0.2)
         threads_started = 0
         threads_ended = 0
         i = 0
         while True:
-            #print(resp_queue.qsize())
+            #print(visited)
             if i >= COMMIT_FREQ:
                 dbconnector.commit()
                 i =- 1
@@ -346,7 +350,12 @@ if __name__ == "__main__":
                     break
                 else:
                     continue
-
+            if isinstance(resp_tuple[0], tuple):
+                visited[resp_tuple[0][0]['url']] = True
+                add_bulk_to_work_queue(work_queue, resp_tuple[0][1], visited)
+                resp_tuple = (resp_tuple[0][0], resp_tuple[1])
+            else:
+                visited[resp_tuple[0]['url']] = True
             if isinstance(resp_tuple[0], dict):
                 '''
                 OPCODES: 
