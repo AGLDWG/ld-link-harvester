@@ -1,4 +1,4 @@
-from charts import progress_chart, file_format_chart, size_histogram
+from charts import progress_chart, file_format_chart, size_histogram, request_time_scatter
 import harvester
 import matplotlib.pyplot as plt
 import os
@@ -26,6 +26,51 @@ if __name__ == '__main__':
     else:
         shutil.rmtree(SAVE_CHART_DIRECTORY)
         os.mkdir(SAVE_CHART_DIRECTORY)
+
+    # Plot Seed Count-Time Scatter (with third dimension)
+    dbconnector.cursor.execute("""
+        SELECT Crawl.crawlId, endDate - startDate as elapsed, count(distinct originSeedURI), count(address)
+        FROM Crawl, Link
+        WHERE Crawl.crawlId = Link.crawlId
+        GROUP BY Crawl.crawlId;
+    """)
+    seed_count_time_data = dbconnector.cursor.fetchall()
+    request_time_scatter.seed_count_time_scatter_3d(seed_count_time_data, 'Seeds and Links Visited vs Time Requirements')
+    if SHOW_CHART:
+        plt.show()
+    if SAVE_CHART:
+        plt.savefig(SAVE_CHART_DIRECTORY + 'seeds_requests_crawl_size_time.png', bbox_inches="tight", dpi=300)
+    plt.close()
+
+    # Plot Request Count-Time Scatter
+    dbconnector.cursor.execute("""
+        SELECT Crawl.crawlId, endDate - startDate as elapsed, count(address)
+        FROM Crawl, Link
+        WHERE Crawl.crawlId = Link.crawlId
+        GROUP BY Crawl.crawlId;
+    """)
+    seed_count_time_data = dbconnector.cursor.fetchall()
+    request_time_scatter.request_count_time_scatter(seed_count_time_data, 'Requests Made vs Time Requirements')
+    if SHOW_CHART:
+        plt.show()
+    if SAVE_CHART:
+        plt.savefig(SAVE_CHART_DIRECTORY + 'requests_crawl_size_time.png', bbox_inches="tight", dpi=300)
+    plt.close()
+
+    # Plot Seed Count-Time Scatter
+    dbconnector.cursor.execute("""
+            SELECT Crawl.crawlId, endDate - startDate as elapsed, count(distinct originSeedURI)
+            FROM Crawl, Link
+            WHERE Crawl.crawlId = Link.crawlId
+            GROUP BY Crawl.crawlId;
+        """)
+    seed_count_time_data = dbconnector.cursor.fetchall()
+    request_time_scatter.seed_count_time_scatter(seed_count_time_data, 'Crawl Size vs Time Requirements')
+    if SHOW_CHART:
+        plt.show()
+    if SAVE_CHART:
+        plt.savefig(SAVE_CHART_DIRECTORY + 'seeds_crawl_size_time.png', bbox_inches="tight", dpi=300)
+    plt.close()
 
     # Plot Progress Pie Chart
     dbconnector.cursor.execute("""
@@ -103,11 +148,11 @@ if __name__ == '__main__':
 
     # Plot RDF Per Site Histogram
     dbconnector.cursor.execute("""
-            SELECT originSeedURI, COUNT(DISTINCT rdfSeedURI)
-            FROM RdfURI
-            GROUP BY originSeedURI
-            HAVING COUNT(DISTINCT rdfSeedURI) > 1;
-        """)
+        SELECT originSeedURI, COUNT(DISTINCT rdfSeedURI)
+        FROM RdfURI
+        GROUP BY originSeedURI
+        HAVING COUNT(DISTINCT rdfSeedURI) > 1;
+    """)
     seed_size_data = dbconnector.cursor.fetchall()
     size_histogram.plot_size_histogram(seed_size_data, 200, "RDF Domain Size Distribution")
     if SHOW_CHART:
@@ -115,3 +160,6 @@ if __name__ == '__main__':
     if SAVE_CHART:
         plt.savefig(SAVE_CHART_DIRECTORY + 'rdf_domain_size_histogram.png', bbox_inches="tight", dpi=300)
     plt.close()
+
+
+

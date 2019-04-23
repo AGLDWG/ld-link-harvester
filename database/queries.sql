@@ -113,16 +113,8 @@ WHERE crawlId in (
     WHERE endDate is Null)
 GROUP BY crawlId;
 
-;WITH PseudoEnds as
-(
-    SELECT crawlId, MAX(dateVisited) as LatestVisit
-    FROM Link
-    GROUP BY crawlId
-)
-UPDATE Crawl
-SET endDate = (
-    SELECT LatestVisit
-    FROM PseudoEnds
-    WHERE Crawl.crawlId = PseudoEnds.crawlId)
-WHERE endDate is null
-    AND PseudoEnds.crawlId = Crawl.crawlId;
+-- Obtain the time elapsed for each crawl and the count of seeds visited.
+SELECT crawl.crawlId, endDate - startDate as elapsed, count(distinct originSeedURI)
+FROM Crawl, Link
+WHERE Crawl.crawlId = Link.crawlId
+GROUP BY Crawl.crawlId;
