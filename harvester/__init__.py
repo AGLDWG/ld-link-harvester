@@ -22,6 +22,7 @@ SCHEMA_INTEGRITY_CHECK = True  # If False and not creating new db, do not need t
 CRAWL_RECORD_REPAIR = True
 RESPONSE_TIMEOUT = 60
 MAX_REDIRECTS = 3
+KILL_PROCESSES_TIMEOUT = 600 # If monitoring process detects no activity for more than this (seconds), kill all processes
 RECURSION_DEPTH_LIMIT = 3
 PROC_COUNT = 8
 COMMIT_FREQ = 50
@@ -336,7 +337,11 @@ if __name__ == "__main__":
         threads_started = 0
         threads_ended = 0
         i = 0
+        emergency_timeout_start = time.time()
+        emergency_timeout = False
         while True:
+            if not resp_queue.empty():
+                emergency_timeout_start = time.time()
             #print(resp_queue.qsize())
             if i >= COMMIT_FREQ:
                 dbconnector.commit()
@@ -378,7 +383,14 @@ if __name__ == "__main__":
                 print("{} : {}".format(str(resp_tuple[0]['url']), str(resp_tuple[1])))
             else:
                 print("{} : {}".format(str(resp_tuple[0]['url']), str(resp_tuple[1].status_code)))
-        [p.join() for p in worker_procs]
+            if time.time() - emergency_timeout_start > KILL_PROCESSES_TIMEOUT:
+                print("FROZEN. Emergency Timeout.")
+                emergency_timeout = True
+                break
+        if not emergency_timeout:
+            [p.join() for p in worker_procs]
+        else:
+            [p.terminate() for p in worker_procs]
         if not AUTO_PROCESS_OVERFLOW:
             break
         else:
