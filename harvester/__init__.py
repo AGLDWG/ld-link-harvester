@@ -22,7 +22,7 @@ SCHEMA_INTEGRITY_CHECK = True  # If False and not creating new db, do not need t
 CRAWL_RECORD_REPAIR = True
 RESPONSE_TIMEOUT = 60
 MAX_REDIRECTS = 3
-KILL_PROCESSES_TIMEOUT = 600 # If monitoring process detects no activity for more than this (seconds), kill all processes
+KILL_PROCESSES_TIMEOUT = 1 #600 # If monitoring process detects no activity for more than this (seconds), kill all processes
 RECURSION_DEPTH_LIMIT = 3
 PROC_COUNT = 8
 COMMIT_FREQ = 50
@@ -357,7 +357,6 @@ if __name__ == "__main__":
                     break
                 else:
                     continue
-
             if isinstance(resp_tuple[0], dict):
                 '''
                 OPCODES: 
@@ -391,6 +390,8 @@ if __name__ == "__main__":
             [p.join() for p in worker_procs]
         else:
             [p.terminate() for p in worker_procs]
+            if not work_queue.empty():
+                continue
         if not AUTO_PROCESS_OVERFLOW:
             break
         else:
