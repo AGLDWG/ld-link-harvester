@@ -151,6 +151,7 @@ def find_links_html(response_content, uri, seed, depth=0):
         link = link.get('href')
         link = urljoin(uri, link)
         link = link.split('#')[0]
+        link = link.split('?')[0] # Removes queries.
         if urlparse(link).path.split('/')[-1].split('.')[-1] in BLACKLIST_FORMATS:
             continue
         if isinstance(link, str):
