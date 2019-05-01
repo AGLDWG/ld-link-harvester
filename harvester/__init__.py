@@ -21,6 +21,7 @@ DATABASE_TEMPLATE = '../database/create_database.sql'
 SCHEMA_INTEGRITY_CHECK = True  # If False and not creating new db, do not need template file. RECOMMEND TO LEAVE True.
 CRAWL_RECORD_REPAIR = True
 RESPONSE_TIMEOUT = 60
+MAX_REDIRECTS = 3
 RECURSION_DEPTH_LIMIT = 3
 PROC_COUNT = 8
 COMMIT_FREQ = 50
@@ -246,7 +247,10 @@ def worker_fn(p, in_queue, out_queue, visited):
         try:
             if url not in visited and depth <= RECURSION_DEPTH_LIMIT:
                 visited[url] = True
+                session = requests.Session()
+                session.max_redirects = MAX_REDIRECTS
                 resp = requests.get(url, headers=GLOBAL_HEADER, timeout=RESPONSE_TIMEOUT)
+                session.close()
             else:
                 continue
         except Exception as e:
