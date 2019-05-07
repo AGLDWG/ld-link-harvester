@@ -14,10 +14,10 @@ from .lddatabase import LDHarvesterDatabaseConnector
 URL_SOURCE = 'single_URI.txt'
 if len(sys.argv) > 1:
     URL_SOURCE = sys.argv[1]
-WORK_QUEUE_OVERFLOW_FILE = 'data/overflow_urls.txt'
 AUTO_PROCESS_OVERFLOW = True
 DATABASE_FILE = 'data/ld-database.db'
 DATABASE_TEMPLATE = '../database/create_database.sql'
+WORK_QUEUE_OVERFLOW_FILE = '{}_overflow.txt'.format(URL_SOURCE)
 SCHEMA_INTEGRITY_CHECK = True  # If False and not creating new db, do not need template file. RECOMMEND TO LEAVE True.
 CRAWL_RECORD_REPAIR = True
 RESPONSE_TIMEOUT = 60
