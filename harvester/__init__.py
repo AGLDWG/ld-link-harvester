@@ -8,7 +8,7 @@ import os
 import sys
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
-from .lddatabase import LDHarvesterDatabaseConnector
+from lddatabase import LDHarvesterDatabaseConnector
 
 # Set Global Variables
 URL_SOURCE = 'single_URI.txt'
@@ -198,7 +198,7 @@ def process_response(response, uri, seed, depth):
                             uri = response.history[0].headers['Location']
                         except Exception as er:
                             print("Could not find redirect location in headers for {}: {}".format(uri, er))
-                    if depth == RECURSION_DEPTH_LIMIT:
+                    if depth < RECURSION_DEPTH_LIMIT:
                         child_links = find_links_html(response.content, uri, seed, depth+1)
                         enhanced_resp = {'url': uri,
                                         'opcode': 2,
