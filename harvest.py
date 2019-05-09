@@ -199,7 +199,13 @@ if __name__ == "__main__":
         else:
             [p.terminate() for p in worker_procs]
             if not work_queue.empty():
+                emergency_timeout = False
                 continue
+        if time.time() - emergency_timeout_start > KILL_PROCESSES_TIMEOUT:
+            print("FROZEN. Emergency Timeout.")
+            emergency_timeout = True
+            [p.terminate() for p in worker_procs]
+            break
         if not AUTO_PROCESS_OVERFLOW:
             break
         else:

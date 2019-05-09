@@ -2,7 +2,6 @@ import harvester
 import pandas as pd
 if __name__ == '__main__':
     DATABASE_FILE = "../charts/ld-database.db"
-
     DATABASE_VERIFICATION_TEMPLATE = '../database/create_database.sql'
 
     # Connect to Database

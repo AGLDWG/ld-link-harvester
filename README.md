@@ -1,5 +1,5 @@
 # Linked Data link harvester
-This is a student project based at CSIRO.  
+This is a student project based at CSIRO.
 
 ## Getting Started
 
@@ -11,15 +11,30 @@ $ cd ld-link-harvester
 ```
 
 ### Running the Web Link Harvester
-In order to run the web link harvester, the key script to invoke is \_\_init\_\_.py script of the harvester module. Note that the bare minimum requirement for running the script is a text file containing a set of urls (separated by newlines). The script can be configured to accept said text file by altering the global variable 'URL_SOURCE' at the top of the script (more details are in the [following section](#configuration-variables)).
+In order to run the web link harvester, the key script to invoke is harvest.py script of the harvester module. This script essentially utilizes the harvester module and creates a multiprocessing web crawler. Note that the bare minimum requirement for running the script is a text file containing a set of urls (separated by newlines). The script can be configured to accept said text file by altering the global variable 'URL_SOURCE' at the top of the script (more details are in the [following section](#configuration-variables)).
 ```
-$ cd harvester/
-$ python3 __init__.py
+$ python3 harvest.py
+```
+
+### Charting Data
+The charts module is used to generate charts based on the database information available. The configuration of this script/module is simple. Configure the global variables at the beginning of the '/charts/\_\_init\_\_.py' to properly configure the script (i.e. provide the correct path to the database file, configure the desired output directory, etc.).
+
+Once the script is properly configured, invoke \_\_init\_\_.py as a script to generate charts (note that to display charts, an appropriate window server, must be running).
+
+```
+$ python3 charts/__init__.py
+```
+
+### Retrieving Statistics
+The stats module is a simple module that is used to scan the database and obtain various analytics from the database. In order to use, configure the global variables at the beginning of '/stats/\_\_init\_\_.py' (as done with the charts module) and invoke it as follows.
+
+```
+$ python3 stats/__init__.py
 ```
 
 
 ## Configuration Variables
-Basic configuration options can be provided by modifying the global variables located at the top of the script. Descriptions of each variable are as follows.
+Basic configuration options can be provided by modifying the global variables located at the top of the script. These variables (case-sensitive) are set globally in the Harvester module, however a user-created script (such as harvest.py) can override the default values of these as necessary. Descriptions of each variable are as follows.
 
 | Variable | Function/Description |
 |--------|--------|
@@ -39,14 +54,14 @@ Basic configuration options can be provided by modifying the global variables lo
 | WORK_QUEUE_MAX_SIZE (*int*) | Specifies the number of jobs allowed in the work queue. If this number is exceeded, jobs will be added to the overflow file. |
 | RESP_QUEUE_MAX_SIZE (*int*) | Specifies the maximum number of responses needing processing that the response queue can store. This is not usually an issue because the responses from the workers usually work a lot slower, hence this point in the software is not usually rate limiting. As a result, *overflow handling here is not yet implemented*. |
 | RDF_MEDIA_TYPES (*list*) | A list (of *str*) that specifies the possible rdf media types (i.e. content-types in HTTP responses) that are flagged as Linked Data. **Note:** *Do NOT put 'text/html' in this list as links will not be parsed if this is considered and rdf media type.* |
-| RDF_FORMATS (*list*) | A list (of *str*) that specifies the file formats of a uri that (e.g. <span>https:/</span>/example.com/linkeddata**.rdf**) indicate Linked Data. |
+| RDF_FORMATS (*list*) | A list (of *str*) that specifies the file formats of a uri that (e.g. <span>https:/</span>/example.com/linkeddata.rdf) indicate Linked Data. |
 | GLOBAL_HEADER (*dict*) | A python dictionary object that contains the parameters to be sent in the default HTTP header used at runtime. Parameters/fields should be passed as keys and the parameter values as dictionary values. |
 | BLACKLIST_FORMATS (*list*) | A list (of *str*) that specifies a range of file types that the crawler should avoid (e.g. images, videos, pdf, etc.). |
 
-> NOTE: *When invoking the script from the command line directly, there an optional command line argument can be passed in order to override whatever the value in the URL_SOURCE variable with that of the command line argument. This is particularly useful when running batch runs from a script.
+> NOTE: When invoking the script from the command line directly, there an optional command line argument can be passed in order to override whatever the value in the URL_SOURCE variable with that of the command line argument. This is particularly useful when running batch runs from a script.
 > For example, the command below would override the URL_SOURCE variable specified in the script with 'some_urls.txt'.
 > ```
-> $ python3 __init__.py some_urls.txt
+> $ python3 harvest.py some_urls.txt
 > ```
 
 ## License
@@ -57,7 +72,7 @@ This code is licensed using the GPL v3 licence. See the [LICENSE file](LICENSE) 
 Developer:  
 **Jake Hashim-Jones**
 *Computer Science Student*
-Griffith University  
+Griffith University
 <jake.hashim-jones@griffithuni.edu.au>
 
 Product Owner:  
