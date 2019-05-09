@@ -31,4 +31,4 @@ The following queries are required of the database and are presented below.
 3. Retrieve a list of URIs known to point to RDF data that were discovered within a specific time period.
 4. Retrieve a list of URIs that were tested during a specific crawl.
 5. Retrieve a list of URIs that point to RDF information from a specific domain.
-6. Retrieve a list of URIs and the number of discovered RDF URIs.
+ist of URIs and the number of discovered RDF URIs.6. Retrieve a l

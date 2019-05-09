@@ -8,16 +8,13 @@ import os
 import sys
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
-from lddatabase import LDHarvesterDatabaseConnector
+from harvester.lddatabase import LDHarvesterDatabaseConnector
 
-# Set Global Variables
-URL_SOURCE = 'single_URI.txt'
-if len(sys.argv) > 1:
-    URL_SOURCE = sys.argv[1]
+
 AUTO_PROCESS_OVERFLOW = True
-DATABASE_FILE = 'data/ld-database.db'
+WORK_QUEUE_OVERFLOW_FILE = 'overflow.txt'
+DATABASE_FILE = 'ld-database.db'
 DATABASE_TEMPLATE = '../database/create_database.sql'
-WORK_QUEUE_OVERFLOW_FILE = '{}_overflow.txt'.format(URL_SOURCE)
 SCHEMA_INTEGRITY_CHECK = True  # If False and not creating new db, do not need template file. RECOMMEND TO LEAVE True.
 CRAWL_RECORD_REPAIR = True
 RESPONSE_TIMEOUT = 60
@@ -68,6 +65,7 @@ BLACKLIST_FORMATS = [
     'svg',
     'SVG'
 ]
+
 
 def verify_database(connector, template):
     """
@@ -127,7 +125,7 @@ def connect(database_file, crawl=True):
         exit(1)
 
 
-def close():
+def close(dbconnector, crawlid):
     """
     End the crawl, commit database changes and close the database connection.
     :return: None
@@ -302,6 +300,10 @@ def add_bulk_to_work_queue(queue, content_list, visited_urls=dict()):
 
 
 if __name__ == "__main__":
+    URL_SOURCE = 'single_URI.txt'
+    if len(sys.argv) > 1:
+        URL_SOURCE = sys.argv[1]
+
     """
     Main runtime script. Essentially calls on the functions as appropriate. Handles workers, and processes contents of the response queue.
     """
@@ -323,8 +325,8 @@ if __name__ == "__main__":
     dbconnector.insert_seed_bulk(URL_BATCH)
     dbconnector.commit()
     print("Seeds added to database.")
-    signal.signal(signal.SIGTERM, close)
-    signal.signal(signal.SIGINT, close)
+    #signal.signal(signal.SIGTERM, close)
+    #signal.signal(signal.SIGINT, close)
     full_msg = False
     manager = Manager()
     visited = manager.dict()
@@ -412,5 +414,5 @@ if __name__ == "__main__":
             else:
                 break
     end = time.time()
-    close()
+    close(dbconnector, crawlid)
     print("Duration: {} seconds".format(end - begin))

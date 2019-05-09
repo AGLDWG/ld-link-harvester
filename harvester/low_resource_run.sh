@@ -1,7 +1,7 @@
 #!/bin/bash
 
 prefix="aus-domain-urls_"
-script_command="python3 __init__.py"
+script_command="python3 test.py"
 
 mkdir -p ./data/completed
 

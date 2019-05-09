@@ -113,3 +113,20 @@ venv.bak/
 
 # Backup files
 *.bak
+
+# CSV Files
+*.csv
+
+# Zip Files
+*.zip
+
+# Image Files
+*.png
+*.jpg
+*.bmp
+
+# Other Files
+single_URI.txt
+overflow_urls.txt
+ld_seed_URIs.txt
+aus-domain-urls*

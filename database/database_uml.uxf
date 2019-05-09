@@ -4,8 +4,8 @@
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>0</x>
-      <y>200</y>
+      <x>424</x>
+      <y>232</y>
       <w>264</w>
       <h>152</h>
     </coordinates>
@@ -21,8 +21,8 @@ endDate: INTEGER
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>0</x>
-      <y>520</y>
+      <x>424</x>
+      <y>552</y>
       <w>264</w>
       <h>152</h>
     </coordinates>
@@ -44,8 +44,8 @@ failed:  INTEGER
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>280</x>
-      <y>0</y>
+      <x>704</x>
+      <y>32</y>
       <w>264</w>
       <h>152</h>
     </coordinates>
@@ -61,8 +61,8 @@ crawlID:  INTEGER
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>552</x>
-      <y>200</y>
+      <x>976</x>
+      <y>232</y>
       <w>264</w>
       <h>152</h>
     </coordinates>
@@ -78,8 +78,8 @@ invalidationDate:  INTEGER
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>560</x>
-      <y>520</y>
+      <x>984</x>
+      <y>552</y>
       <w>264</w>
       <h>152</h>
     </coordinates>
@@ -98,8 +98,8 @@ requestDate:  INTEGER
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>0</x>
-      <y>840</y>
+      <x>424</x>
+      <y>872</y>
       <w>264</w>
       <h>152</h>
     </coordinates>
@@ -116,8 +116,8 @@ contentFormat:  VARCHAR(30)
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>256</x>
-      <y>256</y>
+      <x>680</x>
+      <y>288</y>
       <w>312</w>
       <h>40</h>
     </coordinates>
@@ -130,8 +130,8 @@ m2=0..
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>400</x>
-      <y>144</y>
+      <x>824</x>
+      <y>176</y>
       <w>24</w>
       <h>144</h>
     </coordinates>
@@ -141,8 +141,8 @@ m2=0..
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>680</x>
-      <y>344</y>
+      <x>1104</x>
+      <y>376</y>
       <w>40</w>
       <h>192</h>
     </coordinates>
@@ -154,8 +154,8 @@ m2=0..1</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>128</x>
-      <y>344</y>
+      <x>552</x>
+      <y>376</y>
       <w>40</w>
       <h>192</h>
     </coordinates>
@@ -168,8 +168,8 @@ m2=0..1
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>256</x>
-      <y>344</y>
+      <x>680</x>
+      <y>376</y>
       <w>312</w>
       <h>192</h>
     </coordinates>
@@ -182,8 +182,8 @@ m2=      0..1
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>256</x>
-      <y>344</y>
+      <x>680</x>
+      <y>376</y>
       <w>320</w>
       <h>192</h>
     </coordinates>
@@ -196,8 +196,8 @@ m2=1..n
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>120</x>
-      <y>664</y>
+      <x>544</x>
+      <y>696</y>
       <w>40</w>
       <h>192</h>
     </coordinates>
