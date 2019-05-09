@@ -1,7 +1,7 @@
 #!/bin/bash
 
 prefix="aus-domain-urls_"
-script_command="python3 test.py"
+script_command="python3 harvest.py"
 
 mkdir -p ./data/completed
 
@@ -11,7 +11,7 @@ do
 	echo $line
 	if [[ $line == $prefix* ]]; then
 		echo "Starting seeds in $line"
-		$script_command data/$line 2>"./data/completed/error_$line"
+		$script_command data/$line 2>"./errors/error_$line"
 		status=$?
 		if [ $status != 0 ]; then
 		    	echo "Something went wrong in $line. Error code: $status"

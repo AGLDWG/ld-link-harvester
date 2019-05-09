@@ -1,8 +1,6 @@
 import requests
-import pickle
-from multiprocessing import Queue, Process, Manager
+from multiprocessing import Process, Manager
 import time
-import signal
 import sqlite3
 import os
 import sys

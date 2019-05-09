@@ -1,6 +1,5 @@
-from multiprocessing import Queue, Process, Manager
+from multiprocessing import Process, Manager
 import time
-import signal
 import os
 import sys
 import harvester
@@ -10,15 +9,14 @@ URL_SOURCE = 'single_URI.txt'
 if len(sys.argv) > 1:
     URL_SOURCE = sys.argv[1]
 AUTO_PROCESS_OVERFLOW = True
-DATABASE_FILE = 'ld-database.db'
+DATABASE_FILE = 'data/ld-database.db'
 DATABASE_TEMPLATE = 'database/create_database.sql'
-
-WORK_QUEUE_OVERFLOW_FILE = '{}_overflow.txt'.format(URL_SOURCE)
-SCHEMA_INTEGRITY_CHECK = True  # If False and not creating new db, do not need template file. RECOMMEND TO LEAVE True.
+WORK_QUEUE_OVERFLOW_FILE = 'data/{}_overflow.txt'.format(URL_SOURCE.split('/')[-1])
+SCHEMA_INTEGRITY_CHECK = True
 CRAWL_RECORD_REPAIR = True
 RESPONSE_TIMEOUT = 60
 MAX_REDIRECTS = 3
-KILL_PROCESSES_TIMEOUT = 600 #600 # If monitoring process detects no activity for more than this (seconds), kill all processes
+KILL_PROCESSES_TIMEOUT = 600
 RECURSION_DEPTH_LIMIT = 3
 PROC_COUNT = 8
 COMMIT_FREQ = 50
