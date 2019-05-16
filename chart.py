@@ -10,7 +10,7 @@ SAVE_CHART = True
 SAVE_CHART_DIRECTORY = './figures/'  # Should end with '/'
 SHOW_CHART = False
 TOTAL_DOMAINS = 7460919
-
+TRANSPARENT = False
 # Connect to Database
 dbconnector, crawl_id = harvester.connect(DATABASE_FILE, crawl=False)
 if harvester.verify_database(dbconnector, DATABASE_VERIFICATION_TEMPLATE):
@@ -38,7 +38,7 @@ charts.request_time_scatter.seed_count_time_scatter_3d(seed_count_time_data, 'Se
 if SHOW_CHART:
     plt.show()
 if SAVE_CHART:
-    plt.savefig(SAVE_CHART_DIRECTORY + 'seeds_requests_crawl_size_time.png', bbox_inches="tight", dpi=300)
+    plt.savefig(SAVE_CHART_DIRECTORY + 'seeds_requests_crawl_size_time.png', bbox_inches="tight", dpi=300, transparent = TRANSPARENT)
 plt.close()
 
 # Plot Request Count-Time Scatter
@@ -53,7 +53,7 @@ charts.request_time_scatter.request_count_time_scatter(seed_count_time_data, 'Re
 if SHOW_CHART:
     plt.show()
 if SAVE_CHART:
-    plt.savefig(SAVE_CHART_DIRECTORY + 'requests_crawl_size_time.png', bbox_inches="tight", dpi=300)
+    plt.savefig(SAVE_CHART_DIRECTORY + 'requests_crawl_size_time.png', bbox_inches="tight", dpi=300, transparent = TRANSPARENT)
 plt.close()
 
 # Plot Seed Count-Time Scatter
@@ -68,7 +68,7 @@ charts.request_time_scatter.seed_count_time_scatter(seed_count_time_data, 'Crawl
 if SHOW_CHART:
     plt.show()
 if SAVE_CHART:
-    plt.savefig(SAVE_CHART_DIRECTORY + 'seeds_crawl_size_time.png', bbox_inches="tight", dpi=300)
+    plt.savefig(SAVE_CHART_DIRECTORY + 'seeds_crawl_size_time.png', bbox_inches="tight", dpi=300, transparent = TRANSPARENT)
 plt.close()
 
 # Plot Progress Pie Chart
@@ -81,7 +81,7 @@ charts.progress_chart.progress_chart_pie(VISITED_DOMAINS, TOTAL_DOMAINS, "Projec
 if SHOW_CHART:
     plt.show()
 if SAVE_CHART:
-    plt.savefig(SAVE_CHART_DIRECTORY + 'project_progress.png', bbox_inches="tight", dpi=300)
+    plt.savefig(SAVE_CHART_DIRECTORY + 'project_progress.png', bbox_inches="tight", dpi=300, transparent = TRANSPARENT)
 plt.close()
 
 # Plot Response Format Pie Chart
@@ -96,7 +96,7 @@ charts.file_format_chart.file_format_pie(content_format_dict, 'Response Format B
 if SHOW_CHART:
     plt.show()
 if SAVE_CHART:
-    plt.savefig(SAVE_CHART_DIRECTORY + 'content_format_pie.png', bbox_inches="tight", dpi=300)
+    plt.savefig(SAVE_CHART_DIRECTORY + 'content_format_pie.png', bbox_inches="tight", dpi=300, transparent = TRANSPARENT)
 plt.close()
 
 # Plot Response Format Bar Chart
@@ -104,7 +104,7 @@ charts.file_format_chart.file_format_bar(content_format_dict, 'Response Format B
 if SHOW_CHART:
     plt.show()
 if SAVE_CHART:
-    plt.savefig(SAVE_CHART_DIRECTORY + 'content_format_bar.png', bbox_inches="tight", dpi=300)
+    plt.savefig(SAVE_CHART_DIRECTORY + 'content_format_bar.png', bbox_inches="tight", dpi=300, transparent = TRANSPARENT)
 plt.close()
 
 # Plot RDF Response Format Pie Chart
@@ -119,7 +119,7 @@ charts.file_format_chart.file_format_pie(content_format_dict, 'RDF Format Breakd
 if SHOW_CHART:
     plt.show()
 if SAVE_CHART:
-    plt.savefig(SAVE_CHART_DIRECTORY + 'rdf_content_format_pie.png', bbox_inches="tight", dpi=300)
+    plt.savefig(SAVE_CHART_DIRECTORY + 'rdf_content_format_pie.png', bbox_inches="tight", dpi=300, transparent = TRANSPARENT)
 plt.close()
 
 # Plot RDF Response Format Bar Chart
@@ -127,7 +127,7 @@ charts.file_format_chart.file_format_bar(content_format_dict, 'RDF Format Breakd
 if SHOW_CHART:
     plt.show()
 if SAVE_CHART:
-    plt.savefig(SAVE_CHART_DIRECTORY + 'rdf_content_format_bar.png', bbox_inches="tight", dpi=300)
+    plt.savefig(SAVE_CHART_DIRECTORY + 'rdf_content_format_bar.png', bbox_inches="tight", dpi=300, transparent = TRANSPARENT)
 plt.close()
 
 # Plot Site Size Histogram
@@ -138,11 +138,11 @@ dbconnector.cursor.execute("""
         HAVING COUNT(DISTINCT address) > 1;
     """)
 seed_size_data = dbconnector.cursor.fetchall()
-charts.size_histogram.plot_size_histogram(seed_size_data, 200, "Domain Size Distribution")
+charts.size_histogram.plot_size_histogram(seed_size_data, 100, "Domain Size Distribution")
 if SHOW_CHART:
     plt.show()
 if SAVE_CHART:
-    plt.savefig(SAVE_CHART_DIRECTORY + 'domain_size_histogram.png', bbox_inches="tight", dpi=300)
+    plt.savefig(SAVE_CHART_DIRECTORY + 'domain_size_histogram.png', bbox_inches="tight", dpi=300, transparent = TRANSPARENT)
 plt.close()
 
 # Plot RDF Per Site Histogram
@@ -153,9 +153,9 @@ dbconnector.cursor.execute("""
         HAVING COUNT(DISTINCT rdfSeedURI) > 1;
     """)
 seed_size_data = dbconnector.cursor.fetchall()
-charts.size_histogram.plot_size_histogram(seed_size_data, 200, "RDF Domain Size Distribution")
+charts.size_histogram.plot_size_histogram(seed_size_data, 100, "RDF Domain Size Distribution")
 if SHOW_CHART:
     plt.show()
 if SAVE_CHART:
-    plt.savefig(SAVE_CHART_DIRECTORY + 'rdf_domain_size_histogram.png', bbox_inches="tight", dpi=300)
+    plt.savefig(SAVE_CHART_DIRECTORY + 'rdf_domain_size_histogram.png', bbox_inches="tight", dpi=300, transparent = TRANSPARENT)
 plt.close()
