@@ -3,6 +3,11 @@ import matplotlib.pyplot as plt
 
 
 def clean_formats(format_dict):
+    """
+    Clusters/groups the more obscure formats together appropriately to simplify the charts. Modifies dictionary IN PLACE.
+    :param format_dict: dict
+    :return: None
+    """
     seperate_together= ['text/html',
                         'text/xml',
                         'application/json',
@@ -33,6 +38,12 @@ def clean_formats(format_dict):
 
 
 def file_format_pie(format_dict, title=None):
+    """
+    Generates a pie chart based on file formats.
+    :param format_dict: dict
+    :param title: str
+    :return: None
+    """
     data = pd.DataFrame({'Content Format': list(format_dict.values())},
                         index=list(format_dict.keys()))
     no_labels = ['' for i in data.index]
@@ -43,6 +54,12 @@ def file_format_pie(format_dict, title=None):
 
 
 def file_format_bar(format_dict, title=None):
+    """
+    Generates a bar chart based on file formats
+    :param format_dict: dict
+    :param title: str
+    :return: None
+    """
     data = pd.DataFrame({'Content Format': list(format_dict.values())},
                         index=list(format_dict.keys()))
     data.transpose().plot.bar()
