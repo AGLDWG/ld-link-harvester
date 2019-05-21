@@ -6,3 +6,5 @@ pytest
 matplotlib
 xlsxwriter
 numpy
+rdflib
+rdflib-jsonld
