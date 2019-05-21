@@ -10,7 +10,7 @@ def outer_merge_frames(baseframe, appendframe, focal_point):
 
 
 if __name__ == '__main__':
-    DATABASE_FILE = "C:\\Users\\Has112\\Documents\\ld-database.db"
+    DATABASE_FILE = "C:\\Users\\Has112\\Documents\\db_history\\21-05-2019\\ld-database.db"
     DATABASE_VERIFICATION_TEMPLATE = 'database/create_database.sql'
     WORKBOOK_NAME = 'Summary.xlsx'
     TOTAL_DOMAINS = 7460919
@@ -34,11 +34,13 @@ if __name__ == '__main__':
                                                  'font_size': 11,
                                                  'top': 5,
                                                  'border_color': '#3f4956',
-                                                 'bg_color': '#4f81bd'})
+                                                 'bg_color': '#4f81bd',
+                                                 'align': 'right'})
     format_column_summary_extra = workbook.add_format({'bold': True,
-                                                 'font_color': '#FFFFFF',
-                                                 'font_size': 11,
-                                                 'bg_color': '#4f81bd'})
+                                                       'font_color': '#FFFFFF',
+                                                       'font_size': 11,
+                                                       'bg_color': '#4f81bd',
+                                                       'align': 'right'})
     format_column_heading = workbook.add_format({'bold': True,
                                                  'font_color': '#FFFFFF',
                                                  'font_size': 13,
@@ -86,7 +88,7 @@ if __name__ == '__main__':
     # Create 'Summary' Worksheet and Write Data To It.
     summary_worksheet = workbook.add_worksheet('Summary')
     summary_worksheet.write(0, 0, 'Summary', format_sheet_heading)
-    summary = pd.DataFrame([total_crawls, total_seeds_visited, total_failed_seeds, total_links_visited, total_failed_requests, total_rdf_links_found, round((total_seeds_visited / TOTAL_DOMAINS)*100, 2)], index=['Total Crawls Made', 'Total Seeds Visited', 'Total Failed Seeds', 'Total Links Visited', 'Total Failed Link Requests', 'Total RDF Links Found', "Percentage of .au Domain Crawled"])
+    summary = pd.DataFrame([total_crawls, total_seeds_visited, total_failed_seeds, total_links_visited, total_failed_requests, total_rdf_links_found, round((total_seeds_visited / TOTAL_DOMAINS)*100, 2)], index=['Total Crawls Made', 'Total Seeds Processed', 'Total Failed Seeds', 'Total Links Visited', 'Total Failed Link Requests', 'Total RDF Links Found', "Percentage of .au Domain Crawled"])
     row_idx = 2
     max = 0
     for index in summary.index:
@@ -160,8 +162,6 @@ if __name__ == '__main__':
         GROUP BY c.crawlID;
     """).fetchall()
     crawls = pd.DataFrame(crawl_records, columns=['Crawl ID', 'Start', 'End', 'Duration'])
-    crawls['Duration'] = crawls['Duration'].apply(lambda x: x/3600)
-    crawls['Duration'] = crawls['Duration'].round(3)
     seeds_per_crawl = pd.DataFrame(seeds_per_crawl, columns=['Crawl ID', 'Seeds Processed'])
     crawls = outer_merge_frames(crawls, seeds_per_crawl, 'Crawl ID')
     failed_seeds_per_crawl = pd.DataFrame(failed_seeds_per_crawl, columns=['Crawl ID', 'Failed Seeds'])
@@ -169,6 +169,12 @@ if __name__ == '__main__':
     links_visited_per_crawl = pd.DataFrame(links_visited_per_crawl, columns=['Crawl ID', 'Links Visited', 'Average Domain Size'])
     links_visited_per_crawl['Crawl ID'] = links_visited_per_crawl['Crawl ID'].astype(np.int64)
     crawls = outer_merge_frames(crawls, links_visited_per_crawl, 'Crawl ID')
+    crawls['Speed'] = crawls['Links Visited']/crawls['Duration']
+    crawls['Speed'] = crawls['Speed'].round(2)
+    crawls['Speed Domain Processing'] = crawls['Seeds Processed'] / crawls['Duration']
+    crawls['Speed Domain Processing'] = crawls['Speed Domain Processing'].round(2)
+    crawls['Duration'] = crawls['Duration'].apply(lambda x: x / 3600)
+    crawls['Duration'] = crawls['Duration'].round(3)
     links_failed_per_crawl = pd.DataFrame(links_failed_per_crawl, columns=['Crawl ID', 'Failed Requests'])
     links_failed_per_crawl['Crawl ID'] = links_failed_per_crawl['Crawl ID'].astype(np.int64)
     crawls = outer_merge_frames(crawls, links_failed_per_crawl, 'Crawl ID')
@@ -181,7 +187,7 @@ if __name__ == '__main__':
     crawl_records_worksheet.write(0, 0, 'Crawl Records', format_sheet_heading)
     row_idx = 2
     crawl_records_worksheet.set_column(2, 3, 19)
-    crawl_records_worksheet.set_column(3, 10, 22.29)
+    crawl_records_worksheet.set_column(3, 12, 22.29)
     crawl_records_worksheet.write(row_idx, 1, 'CrawlID', format_column_heading)
     crawl_records_worksheet.write(row_idx, 2, 'Start Date', format_column_heading)
     crawl_records_worksheet.write(row_idx, 3, 'End Date', format_column_heading)
@@ -190,8 +196,10 @@ if __name__ == '__main__':
     crawl_records_worksheet.write(row_idx, 6, 'Failed Seeds', format_column_heading)
     crawl_records_worksheet.write(row_idx, 7, 'Links Visited', format_column_heading)
     crawl_records_worksheet.write(row_idx, 8, 'Average Domain Size', format_column_heading)
-    crawl_records_worksheet.write(row_idx, 9, 'Failed Requests', format_column_heading)
-    crawl_records_worksheet.write(row_idx, 10, 'RDF Links Found', format_column_heading)
+    crawl_records_worksheet.write(row_idx, 9, 'Speed (Links/s)', format_column_heading)
+    crawl_records_worksheet.write(row_idx, 10, 'Speed (Domains/s)', format_column_heading)
+    crawl_records_worksheet.write(row_idx, 11, 'Failed Requests', format_column_heading)
+    crawl_records_worksheet.write(row_idx, 12, 'RDF Links Found', format_column_heading)
     row_idx += 1
     for record in crawls.iterrows():
         if row_idx % 2 == 0:
@@ -206,8 +214,10 @@ if __name__ == '__main__':
         crawl_records_worksheet.write(row_idx, 6, record[1][5], format_data_cell)
         crawl_records_worksheet.write(row_idx, 7, record[1][6], format_data_cell)
         crawl_records_worksheet.write(row_idx, 8, record[1][7], format_data_cell)
-        crawl_records_worksheet.write(row_idx, 9, record[1][8], format_data_cell)
-        crawl_records_worksheet.write(row_idx, 10, record[1][9], format_data_cell)
+        crawl_records_worksheet.write(row_idx, 9, record[1][8], format_data_cell) if not np.isnan(record[1][8]) else crawl_records_worksheet.write(row_idx, 9, '', format_data_cell)
+        crawl_records_worksheet.write(row_idx, 10, record[1][9], format_data_cell) if not np.isnan(record[1][9]) else crawl_records_worksheet.write(row_idx, 10, '', format_data_cell)
+        crawl_records_worksheet.write(row_idx, 11, record[1][10], format_data_cell)
+        crawl_records_worksheet.write(row_idx, 12, record[1][11], format_data_cell)
         row_idx += 1
     crawl_records_worksheet.write(row_idx, 1, 'TOTAL', format_column_summary)
     crawl_records_worksheet.write(row_idx, 2, '', format_column_summary)
@@ -217,8 +227,10 @@ if __name__ == '__main__':
     crawl_records_worksheet.write(row_idx, 6, crawls['Failed Seeds'].sum(), format_column_summary)
     crawl_records_worksheet.write(row_idx, 7, crawls['Links Visited'].sum(), format_column_summary)
     crawl_records_worksheet.write(row_idx, 8, crawls['Average Domain Size'].sum(), format_column_summary)
-    crawl_records_worksheet.write(row_idx, 9, crawls['Failed Requests'].sum(), format_column_summary)
-    crawl_records_worksheet.write(row_idx, 10, crawls['RDF Links Found'].sum(), format_column_summary)
+    crawl_records_worksheet.write(row_idx, 9, 'N/A', format_column_summary)
+    crawl_records_worksheet.write(row_idx, 10, 'N/A', format_column_summary)
+    crawl_records_worksheet.write(row_idx, 11, crawls['Failed Requests'].sum(), format_column_summary)
+    crawl_records_worksheet.write(row_idx, 12, crawls['RDF Links Found'].sum(), format_column_summary)
     row_idx += 1
     crawl_records_worksheet.write(row_idx, 1, 'MEAN', format_column_summary_extra)
     crawl_records_worksheet.write(row_idx, 2, '', format_column_summary_extra)
@@ -228,8 +240,10 @@ if __name__ == '__main__':
     crawl_records_worksheet.write(row_idx, 6, crawls['Failed Seeds'].mean().round(2), format_column_summary_extra)
     crawl_records_worksheet.write(row_idx, 7, crawls['Links Visited'].mean().round(2), format_column_summary_extra)
     crawl_records_worksheet.write(row_idx, 8, crawls['Average Domain Size'].mean().round(2), format_column_summary_extra)
-    crawl_records_worksheet.write(row_idx, 9, crawls['Failed Requests'].mean().round(2), format_column_summary_extra)
-    crawl_records_worksheet.write(row_idx, 10, crawls['RDF Links Found'].mean().round(2), format_column_summary_extra)
+    crawl_records_worksheet.write(row_idx, 9, crawls['Speed'].mean().round(2), format_column_summary_extra)
+    crawl_records_worksheet.write(row_idx, 10, crawls['Speed Domain Processing'].mean().round(2), format_column_summary_extra)
+    crawl_records_worksheet.write(row_idx, 11, crawls['Failed Requests'].mean().round(2), format_column_summary_extra)
+    crawl_records_worksheet.write(row_idx, 12, crawls['RDF Links Found'].mean().round(2), format_column_summary_extra)
     row_idx += 1
     crawl_records_worksheet.write(row_idx, 1, 'MEDIAN', format_column_summary_extra)
     crawl_records_worksheet.write(row_idx, 2, '', format_column_summary_extra)
@@ -239,8 +253,10 @@ if __name__ == '__main__':
     crawl_records_worksheet.write(row_idx, 6, crawls['Failed Seeds'].median(), format_column_summary_extra)
     crawl_records_worksheet.write(row_idx, 7, crawls['Links Visited'].median(), format_column_summary_extra)
     crawl_records_worksheet.write(row_idx, 8, crawls['Average Domain Size'].median(), format_column_summary_extra)
-    crawl_records_worksheet.write(row_idx, 9, crawls['Failed Requests'].median(), format_column_summary_extra)
-    crawl_records_worksheet.write(row_idx, 10, crawls['RDF Links Found'].median(), format_column_summary_extra)
+    crawl_records_worksheet.write(row_idx, 9, crawls['Speed'].median().round(2), format_column_summary_extra)
+    crawl_records_worksheet.write(row_idx, 10, crawls['Speed Domain Processing'].median().round(2), format_column_summary_extra)
+    crawl_records_worksheet.write(row_idx, 11, crawls['Failed Requests'].median(), format_column_summary_extra)
+    crawl_records_worksheet.write(row_idx, 12, crawls['RDF Links Found'].median(), format_column_summary_extra)
     row_idx += 1
     crawl_records_worksheet.write(row_idx, 1, 'STD', format_column_summary_extra)
     crawl_records_worksheet.write(row_idx, 2, '', format_column_summary_extra)
@@ -250,8 +266,10 @@ if __name__ == '__main__':
     crawl_records_worksheet.write(row_idx, 6, crawls['Failed Seeds'].std().round(2), format_column_summary_extra)
     crawl_records_worksheet.write(row_idx, 7, crawls['Links Visited'].std().round(2), format_column_summary_extra)
     crawl_records_worksheet.write(row_idx, 8, crawls['Average Domain Size'].std().round(2), format_column_summary_extra)
-    crawl_records_worksheet.write(row_idx, 9, crawls['Failed Requests'].std().round(2), format_column_summary_extra)
-    crawl_records_worksheet.write(row_idx, 10, crawls['RDF Links Found'].std().round(2), format_column_summary_extra)
+    crawl_records_worksheet.write(row_idx, 9, crawls['Speed'].std().round(2), format_column_summary_extra)
+    crawl_records_worksheet.write(row_idx, 10, crawls['Speed Domain Processing'].std().round(2), format_column_summary_extra)
+    crawl_records_worksheet.write(row_idx, 11, crawls['Failed Requests'].std().round(2), format_column_summary_extra)
+    crawl_records_worksheet.write(row_idx, 12, crawls['RDF Links Found'].std().round(2), format_column_summary_extra)
     row_idx += 1
     crawl_records_worksheet.write(row_idx, 1, 'VAR', format_column_summary_extra)
     crawl_records_worksheet.write(row_idx, 2, '', format_column_summary_extra)
@@ -261,8 +279,10 @@ if __name__ == '__main__':
     crawl_records_worksheet.write(row_idx, 6, crawls['Failed Seeds'].var().round(2), format_column_summary_extra)
     crawl_records_worksheet.write(row_idx, 7, crawls['Links Visited'].var().round(2), format_column_summary_extra)
     crawl_records_worksheet.write(row_idx, 8, crawls['Average Domain Size'].var().round(2), format_column_summary_extra)
-    crawl_records_worksheet.write(row_idx, 9, crawls['Failed Requests'].var().round(2), format_column_summary_extra)
-    crawl_records_worksheet.write(row_idx, 10, crawls['RDF Links Found'].var().round(2), format_column_summary_extra)
+    crawl_records_worksheet.write(row_idx, 9, crawls['Speed'].var().round(2), format_column_summary_extra)
+    crawl_records_worksheet.write(row_idx, 10, crawls['Speed Domain Processing'].var().round(2), format_column_summary_extra)
+    crawl_records_worksheet.write(row_idx, 11, crawls['Failed Requests'].var().round(2), format_column_summary_extra)
+    crawl_records_worksheet.write(row_idx, 12, crawls['RDF Links Found'].var().round(2), format_column_summary_extra)
     if INSERT_FIGURES:
         row_idx += 3
         crawl_records_worksheet.write(row_idx, 0, 'Analytics and Figures', format_sheet_heading)
