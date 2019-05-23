@@ -1,16 +1,21 @@
-from multiprocessing import Process, Manager
+from multiprocessing import Process, Manager, current_process
 import time
 import os
 import sys
 import harvester
+import pickle
 
 # Set Global Variables
-URL_SOURCE = 'single_URI.txt'
+URL_SOURCE = 'URI.txt'
 if len(sys.argv) > 1:
     URL_SOURCE = sys.argv[1]
 AUTO_PROCESS_OVERFLOW = True
 DATABASE_FILE = 'data/ld-database.db'
 DATABASE_TEMPLATE = 'database/create_database.sql'
+RESTORE_SESSION = False
+# WORK_QUEUE_BACKUP = 'data/work_queue_backup_{}.queue'.format(URL_SOURCE.split('/')[-1].split('.txt')[0])
+WORK_QUEUE_BACKUP = 'data/work_queue_backup_{}.bqueue'.format(URL_SOURCE.split('/')[-1].split('.txt')[0])
+SESSION_AUTH_KEY_BACKUP = 'data/work_queue_backup_{}.authkey'.format(URL_SOURCE.split('/')[-1].split('.txt')[0])
 WORK_QUEUE_OVERFLOW_FILE = 'data/{}_overflow.txt'.format(URL_SOURCE.split('/')[-1])
 SCHEMA_INTEGRITY_CHECK = True
 CRAWL_RECORD_REPAIR = True
@@ -20,6 +25,7 @@ KILL_PROCESSES_TIMEOUT = 600
 RECURSION_DEPTH_LIMIT = 3
 PROC_COUNT = 8
 COMMIT_FREQ = 50
+WORKQ_BACKUP_FREQUENCY = 5
 WORK_QUEUE_MAX_SIZE = 1000000
 RESP_QUEUE_MAX_SIZE = 1000000
 RDF_MEDIA_TYPES = [
@@ -109,7 +115,6 @@ if __name__ == "__main__":
     """
     Main runtime script. Essentially calls on the functions as appropriate. Handles workers, and processes contents of the response queue.
     """
-    URL_BATCH = [(url.strip(), 0, url.strip()) for url in open(URL_SOURCE)]
     dbconnector, crawlid = harvester.connect(DATABASE_FILE)
     if SCHEMA_INTEGRITY_CHECK:
         if harvester.verify_database(dbconnector, DATABASE_TEMPLATE):
@@ -120,18 +125,38 @@ if __name__ == "__main__":
     if CRAWL_RECORD_REPAIR:
         repairs_required, repairs_made = dbconnector.self_repair_crawl_periods()
         if repairs_required != 0:
-            print("Repairing Crawl records.\nRepairs Required: {}\nRepairs Made: {}".format(repairs_required, repairs_made))
+            print("Repairing Crawl records.\nRepairs Required: {}\nRepairs Made: {}".format(repairs_required,
+                                                                                            repairs_made))
         else:
             print("No Crawl record repairs are required.")
-    print("Adding seeds to database.")
-    dbconnector.insert_seed_bulk(URL_BATCH)
-    dbconnector.commit()
-    print("Seeds added to database.")
+    if not RESTORE_SESSION:
+        URL_BATCH = [(url.strip(), 0, url.strip()) for url in open(URL_SOURCE)]
+        print("Adding seeds to database.")
+        dbconnector.insert_seed_bulk(URL_BATCH)
+        dbconnector.commit()
+        print("Seeds added to database.")
     full_msg = False
     manager = Manager()
     visited = manager.dict()
-    work_queue = manager.Queue(maxsize=WORK_QUEUE_MAX_SIZE)
-    work_queue = harvester.add_bulk_to_work_queue(work_queue, URL_BATCH)
+    if not RESTORE_SESSION:
+        with open(SESSION_AUTH_KEY_BACKUP, 'wb') as key_file:
+            key_file.write(current_process().authkey)
+        work_queue = manager.Queue(maxsize=WORK_QUEUE_MAX_SIZE)
+        work_queue = harvester.add_bulk_to_work_queue(work_queue, URL_BATCH)
+    else:
+        try:
+            with open(SESSION_AUTH_KEY_BACKUP, 'rb') as key_file:
+                authkey = key_file.read()
+            current_process().authkey = authkey
+        except Exception as e:
+            print('Error restoring session authkey: {}'.format(e))
+            exit(1)
+        try:
+            with open(WORK_QUEUE_BACKUP, 'rb') as backup_file:
+                work_queue = pickle.load(backup_file)
+        except Exception as e:
+            print("Error restoring session work queue from '{}': {}".format(WORK_QUEUE_BACKUP, e))
+            exit(1)
     resp_queue = manager.Queue(maxsize=RESP_QUEUE_MAX_SIZE)
     begin = time.time()
     while True:
@@ -145,16 +170,21 @@ if __name__ == "__main__":
         threads_started = 0
         threads_ended = 0
         i = 0
+        j = 0
         emergency_timeout_start = time.time()
         emergency_timeout = False
         while True:
             if not resp_queue.empty():
                 emergency_timeout_start = time.time()
-            #print(resp_queue.qsize())
             if i >= COMMIT_FREQ:
                 dbconnector.commit()
                 i =- 1
+            if j >= WORKQ_BACKUP_FREQUENCY:
+                with open(WORK_QUEUE_BACKUP, 'wb+') as backup_file:
+                    pickle.dump(work_queue, backup_file)
+                j = -1
             i += 1
+            j += 1
             resp_tuple = resp_queue.get()
             if resp_tuple == harvester.start_sentinel:
                 threads_started += 1
@@ -219,6 +249,8 @@ if __name__ == "__main__":
                     break
             else:
                 break
+    #os.remove(SESSION_AUTH_KEY_BACKUP)
+    #os.remove(WORK_QUEUE_BACKUP)
     end = time.time()
     harvester.close(dbconnector, crawlid)
     print("Duration: {} seconds".format(end - begin))
