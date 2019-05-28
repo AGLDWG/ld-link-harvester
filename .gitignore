@@ -125,6 +125,9 @@ venv.bak/
 *.jpg
 *.bmp
 
+!harvester/tests/TestWebsite/*
+!harvester/tests/TestWebsite/images/*
+
 # Other Files
 single_URI.txt
 overflow_urls.txt

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+        <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+        <title>Australian Animals Catalogue</title>
+        <link rel='stylesheet' type='text/css', href='style.css'>
+    </head>
+    <body>
+        <header>
+            <h1>Australian Animals Catalogue</h1>
+            <nav>
+                <ul>
+                    <li><a href='index.html'>Home</a></li>
+                    <li><a href='birds.html'>Birds</a></li>
+                    <li><a href='mammals.html'l>Mammals</a></li>
+                    <li><a href='fish.html'>Fish</a></li>
+                    <li><a href='reptiles.html'>Reptiles</a></li>
+                    <li><a href='amphibians.html'>Amphibians</a></li>
+                    <li><a href='anthropods.html'>Arthropods</a></li>
+                    <li><a href='form.html'>Submit Sightings</a></li>
+                    <li><a href='contact.html'>Contact Us</a></li>
+                </ul>
+            </nav>
+        </header>
+
+        <div class='content'>
+        <h1>Submit a sighting!</h1>
+        <form>
+            <div class="form-group">  
+                <div class="row">
+                    <div class="col">
+                        <label for="fname">First Name</label>
+                        <input class="form-control" id="fname" name="fname" type="text">
+                    </div>
+                    <div class="col">
+                        <label for="lname">Last Name</label>
+                        <input class="form-control" id="lname" name="lname" type="text">
+                    </div>
+                </div>
+                <br>
+                <label for="mobileno">Mobile Number</label>
+                <input class="form-control" id="mobileno" name="mobileno" type="tel">
+            </div>
+            <div class="form-group">
+                <label for="animalclass">Animal Class</label>
+                <select class="form-control" name="animalclass" id="animalclass">
+                    <option value="mammal">Mammal</option>
+                    <option value="amphibian">Amphibian</option>
+                    <option value="bird">Bird</option>
+                    <option value="fish">Fish</option>
+                    <option value="anthropod">Anthropod</option>
+                    <option value="reptile">Reptile</option>
+                </select>
+                <br>
+                <div class="row">
+                    <div class="col">
+                        <label for="dateseen">Date Sighted</label>
+                        <input class="form-control" type="date" id="dateseen" name="dateseen">
+                    </div>
+                    <div class="col">
+                        <span>Time of Sighting</span><br>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input form-check-inline" type="radio" name="timeseen" id="day" value="day">
+                            <label class="form-check-label form-check-inline" for="timeseen">Day</label>
+                            <input class="form-check-input form-check-inline" type="radio" name="timeseen" id="night" value="night">
+                            <label class="form-check-label form-check-inline" for="timeseen">Night</label>
+                            <br>
+                        </div>
+                    </div>
+                </div>
+                <label for="description">Description of Animal</label>
+                <textarea class="form-control" name="description" id="description"></textarea>
+            </div>
+            <div class="form-group">
+                <span>State Animal Sighted In</span><br>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input form-check-inline" type="checkbox" name="state" id="qld" value="qld">
+                    <label class="form-check-label form-check-inline" for="qld">QLD</label>
+                    <input class="form-check-input form-check-inline" type="checkbox" name="state" id="nsw" value="nsw">
+                    <label class="form-check-label form-check-inline" for="nsw">NSW</label>
+                    <input class="form-check-input form-check-inline" type="checkbox" name="state" id="vic" value="vic">
+                    <label class="form-check-label form-check-inline" for="vic">VIC</label>
+                    <input class="form-check-input form-check-inline" type="checkbox" name="state" id="nt" value="nt">
+                    <label class="form-check-label form-check-inline" for="nt">NT</label>
+                    <input class="form-check-input form-check-inline" type="checkbox" name="state" id="sa" value="sa">
+                    <label class="form-check-label form-check-inline" for="sa">SA</label>
+                    <input class="form-check-input form-check-inline" type="checkbox" name="state" id="wa" value="wa">
+                    <label class="form-check-label form-check-inline" for="wa">WA</label>
+                    <input class="form-check-input form-check-inline" type="checkbox" name="state" id="tas" value="tas">
+                    <label class="form-check-label form-check-inline" for="tas">TAS</label>
+                    <br>
+                </div>
+                <label for="nearesttown">Nearest Town</label>
+                <input class="form-control" type="text" name="nearesttown" id="nearesttown">
+            </div>
+            <div class="form-group">
+                <input class="btn btn-primary" type="submit" value="Submit Sighting">
+            </div>
+        </form>
+        </div>
+        <footer>Australian Animals Catalogue<br>&copy2019 - Jake Hashim-Jones</footer>
+    </body>
+</html>
