@@ -4,10 +4,10 @@ import os
 import shutil
 import charts
 
-DATABASE_FILE = "C:\\Users\\Has112\\Documents\\db_history\\21-05-2019\\ld-database.db"
+DATABASE_FILE = "C:\\Users\\Has112\\Documents\\db_history\\28-05-2019\\ld-database.db"
 DATABASE_VERIFICATION_TEMPLATE = 'database/create_database.sql'
 SAVE_CHART = True
-SAVE_CHART_DIRECTORY = './figures/'  # Should end with '/'
+SAVE_CHART_DIRECTORY = 'C:\\Users\\Has112\\Documents\\db_history\\28-05-2019\\figures\\'  # Should end with '/'
 SHOW_CHART = False
 TOTAL_DOMAINS = 7460919
 TRANSPARENT = False

@@ -10,11 +10,12 @@ def outer_merge_frames(baseframe, appendframe, focal_point):
 
 
 if __name__ == '__main__':
-    DATABASE_FILE = "C:\\Users\\Has112\\Documents\\db_history\\21-05-2019\\ld-database.db"
+    DATABASE_FILE = "C:\\Users\\Has112\\Documents\\db_history\\28-05-2019\\ld-database.db"
     DATABASE_VERIFICATION_TEMPLATE = 'database/create_database.sql'
-    WORKBOOK_NAME = 'Summary.xlsx'
+    WORKBOOK_NAME = 'C:\\Users\\Has112\\Documents\\db_history\\28-05-2019\\28-05-2019_Summary.xlsx'
     TOTAL_DOMAINS = 7460919
     INSERT_FIGURES = True
+    FIGURES_DIRECTORY = 'C:\\Users\\Has112\\Documents\\db_history\\28-05-2019\\figures\\'
 
     # Open Workbook
     workbook = xlsxwriter.Workbook(WORKBOOK_NAME)
@@ -104,7 +105,7 @@ if __name__ == '__main__':
         row_idx += 1
     row_idx += 2
     if INSERT_FIGURES:
-        summary_worksheet.insert_image(row_idx, 1, 'figures/project_progress.png')
+        summary_worksheet.insert_image(row_idx, 1, FIGURES_DIRECTORY + 'project_progress.png')
     # Create a Crawl Summary Sheet in the WorkBook
     crawl_records = dbconnector.cursor.execute("""
         SELECT
@@ -287,15 +288,15 @@ if __name__ == '__main__':
         row_idx += 3
         crawl_records_worksheet.write(row_idx, 0, 'Analytics and Figures', format_sheet_heading)
         row_idx += 2
-        crawl_records_worksheet.insert_image(row_idx, 1, 'figures/seeds_crawl_size_time.png')
+        crawl_records_worksheet.insert_image(row_idx, 1, FIGURES_DIRECTORY + 'seeds_crawl_size_time.png')
         row_idx += 23
-        crawl_records_worksheet.insert_image(row_idx, 1, 'figures/requests_crawl_size_time.png')
+        crawl_records_worksheet.insert_image(row_idx, 1, FIGURES_DIRECTORY + 'requests_crawl_size_time.png')
         row_idx += 23
-        crawl_records_worksheet.insert_image(row_idx, 1, 'figures/seeds_requests_crawl_size_time.png')
+        crawl_records_worksheet.insert_image(row_idx, 1, FIGURES_DIRECTORY + 'seeds_requests_crawl_size_time.png')
         row_idx += 23
-        crawl_records_worksheet.insert_image(row_idx, 1, 'figures/rdf_domain_size_histogram.png')
+        crawl_records_worksheet.insert_image(row_idx, 1, FIGURES_DIRECTORY + 'rdf_domain_size_histogram.png')
         row_idx += 23
-        crawl_records_worksheet.insert_image(row_idx, 1, 'figures/domain_size_histogram.png')
+        crawl_records_worksheet.insert_image(row_idx, 1, FIGURES_DIRECTORY + 'domain_size_histogram.png')
         row_idx += 23
 
     # Create Format Summary Worksheet
@@ -393,13 +394,13 @@ if __name__ == '__main__':
         row_idx += 3
         response_format_summary_sheet.write(row_idx, 0, 'Charts and Figures', format_sheet_heading)
         row_idx += 2
-        response_format_summary_sheet.insert_image(row_idx, 1, 'figures/content_format_pie.png')
+        response_format_summary_sheet.insert_image(row_idx, 1, FIGURES_DIRECTORY + 'content_format_pie.png')
         row_idx += 23
-        response_format_summary_sheet.insert_image(row_idx, 1, 'figures/content_format_bar.png')
+        response_format_summary_sheet.insert_image(row_idx, 1, FIGURES_DIRECTORY + 'content_format_bar.png')
         row_idx += 23
-        response_format_summary_sheet.insert_image(row_idx, 1, 'figures/rdf_content_format_pie.png')
+        response_format_summary_sheet.insert_image(row_idx, 1, FIGURES_DIRECTORY + 'rdf_content_format_pie.png')
         row_idx += 23
-        response_format_summary_sheet.insert_image(row_idx, 1, 'figures/rdf_content_format_bar.png')
+        response_format_summary_sheet.insert_image(row_idx, 1, FIGURES_DIRECTORY + 'rdf_content_format_bar.png')
         row_idx += 23
 
     # Create Sheet Containing Data on ALL formats that are included under other.
