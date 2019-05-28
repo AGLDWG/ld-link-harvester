@@ -125,6 +125,7 @@ venv.bak/
 *.jpg
 *.bmp
 
+# Testing Website Exceptions
 !harvester/tests/TestWebsite/*
 !harvester/tests/TestWebsite/images/*
 

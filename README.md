@@ -11,15 +11,15 @@ $ cd ld-link-harvester
 ```
 
 ### Running the Web Link Harvester
-In order to run the web link harvester, the key script to invoke is harvest.py script of the harvester module. This script essentially utilizes the harvester module and creates a multiprocessing web crawler. Note that the bare minimum requirement for running the script is a text file containing a set of urls (separated by newlines). The script can be configured to accept said text file by altering the global variable 'URL_SOURCE' at the top of the script (more details are in the [following section](#configuration-variables)).
+In order to run the web link harvester, the key script to invoke is `harvest.py`. This script essentially utilizes the harvester module and creates a multiprocessing web crawler. Note that the bare minimum requirement for running the script is a text file containing a set of urls (separated by newlines). The script can be configured to accept said text file by altering the global variable `URL_SOURCE` at the top of the script (more details are in the [following section](#configuration-variables)).
 ```
 $ python3 harvest.py
 ```
 
 ### Charting Data
-The charts module is used to generate charts based on the database information available. A script to use this module is provided (/chart.py). Configure the global variables at the beginning of the '/chart.py' to properly configure the script (i.e. provide the correct path to the database file, configure the desired output directory, etc.).
+The charts module is used to generate charts based on the database information available. A script to use this module is provided (/chart.py). Configure the global variables at the beginning of the `chart.py` to properly configure the script (i.e. provide the correct path to the database file, configure the desired output directory, etc.).
 
-Once the script is properly configured (using the global variables), invoke chart.py as a script to generate charts (note that to display charts, an appropriate window server must be running for matplotlib to hook).
+Once the script is properly configured (using the global variables), invoke `chart.py` as a script to generate charts (note that to display charts, an appropriate window server must be running for matplotlib to hook).
 
 ```
 $ python3 charts.py
@@ -66,21 +66,35 @@ Basic configuration options can be provided by modifying the global variables lo
 > $ python3 harvest.py some_urls.txt
 > ```
 
+## Unit Testing
+A unit testing suite is included in `harvester/tests`. This suite contains 5 scripts that collectively run 19 unit tests to ensure basic functionality of the crawler. Note that this does not test for complex bugs that may occur in revisions. There is also a test website included to support these unit tests. In order to get the tests to work, this website MUST be running on a simple HTTP server at the loopback address of the localhost, at port 8080 (i.e. site must be available at http://127.0.0.1:8080 on the local machine). If this requirement is not met, tests will fail.
+
+The unit tests provided (19 in total) per each of the 5 scripts are outlined as follows.
+
+| Functional Area | Script | Unit Tests |
+|-----------------|--------|------------|
+| Database Verification | test_database_verification.py | <ul><li>Appropriate verification of  normal schema</li><li>Appropriate rejection of damaged schema</li></ul> |
+| Link Parsing | test_link_parser.py | <ul><li>Appropriate conversion of relative to absolute links</li><li>Appropriate detection of external links.</li><li>Appropriate filtering of blacklisted file types</li><li>Appropriate removal of anchor links</li></ul> |
+| Response Handling | test_response_handler.py | <ul><li>Appropriate handling of valid response.</li><li>Appropriate handling of erroneous response.</li><li> Appropriate handling of missing file formats in response.</li><li>Appropriate handling of rdf detection in URL file name.</li><li>Appropriate handling of rdf detection based on response content type.</li><li>Appropriate handling of invalid formats.</li><li>Appropriate handling of redirection and seed modification.</li></ul> |
+| Worker Function (Single) | test_worker.py | <ul><li>Appropriate behaviour of worker function.</li><li>Appropriate compilation of visited list (dictionary).</li><li>Not adding duplicate entries to visited list.</li></ul> |
+| Parallel Processing | test_workers_parallel.py | *When parallel processing…*<br><ul><li>Appropriate behaviour of   worker function.</li><li>Appropriate compilation of visited list (dictionary).</li><li>Not adding duplicate entries to visited list.</li></ul> |
+
+All unit tests were designed and tested using the **PyTest** module.
 ## License
 This code is licensed using the GPL v3 licence. See the [LICENSE file](LICENSE) for the deed.
 
 
 ## Contacts
 Developer:  
-**Jake Hashim-Jones**
-*Computer Science Student*
-Griffith University
-<jake.hashim-jones@griffithuni.edu.au>
+**Jake Hashim-Jones**  
+*Computer Science Student*  
+Griffith University  
+<jake.hashim-jones@griffithuni.edu.au>  
 
 Product Owner:  
 **Nicholas Car**  
 *Senior Experimental Scientist*  
 CSIRO Land & Water, Environmental Informatics Group  
-<nicholas.car@csiro.au>
+<nicholas.car@csiro.au>  
 
 
