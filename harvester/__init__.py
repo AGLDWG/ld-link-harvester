@@ -245,7 +245,10 @@ def worker_fn(p, in_queue, out_queue, visited):
     print("Process {} started.".format(p))
     out_queue.put(start_sentinel)
     while not in_queue.empty():
-        url = in_queue.get()
+        try:
+            url = in_queue.get(block=False)
+        except Exception as e:
+            continue
         url, depth, seed = url
         try:
             if url not in visited and depth <= RECURSION_DEPTH_LIMIT:
