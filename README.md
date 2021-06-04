@@ -80,8 +80,10 @@ The unit tests provided (19 in total) per each of the 5 scripts are outlined as 
 | Parallel Processing | test_workers_parallel.py | *When parallel processing…*<br><ul><li>Appropriate behaviour of   worker function.</li><li>Appropriate compilation of visited list (dictionary).</li><li>Not adding duplicate entries to visited list.</li></ul> |
 
 All unit tests were designed and tested using the **PyTest** module.
+
+
 ## License
-This code is licensed using the GPL v3 licence. See the [LICENSE file](LICENSE) for the deed.
+This code is licensed using the Apache 2.0 licence. See the [LICENSE file](LICENSE) for the deed.
 
 
 ## Contacts
